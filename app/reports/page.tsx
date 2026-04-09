@@ -6,9 +6,9 @@ import { supabase } from '@/lib/supabase'
 
 type Report = {
   id: string
-  date: string
+  date: string | null
   site_name: string | null
-  content: string
+  content: string | null
   photo_url: string | null
   workers: { name: string }[] | null
 }
@@ -31,7 +31,7 @@ export default function ReportsPage() {
         photo_url,
         workers(name)
       `)
-      .order('date', { ascending: false })
+      .order('date', { ascending: false, nullsFirst: false })
 
     if (error) {
       alert('取得エラー: ' + error.message)
@@ -78,10 +78,10 @@ export default function ReportsPage() {
               background: '#fff'
             }}
           >
-            <p>📅 {item.date}</p>
+            <p>📅 {item.date || '未入力'}</p>
             <p>🏗 {item.site_name || '未入力'}</p>
             <p>👷 {item.workers?.[0]?.name || '未選択'}</p>
-            <p>📝 {item.content}</p>
+            <p>📝 {item.content || '未入力'}</p>
 
             {item.photo_url && (
               <img

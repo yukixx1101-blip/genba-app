@@ -92,8 +92,8 @@ export default function NewReportPage() {
 
       const { error } = await supabase.from('reports').insert({
         date,
-        worker_id: workerId || null,
         site_name: siteName,
+        worker_id: workerId || null,
         content,
         photo_url: photoUrl
       })
