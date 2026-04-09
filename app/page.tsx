@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-type RawItem = {
+type RawSchedule = {
   id?: string | number;
   work_date?: string;
   date?: string;
@@ -36,15 +36,21 @@ export default function HomePage() {
     fetch("/api/schedules", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        const list = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
 
-        const normalized: ScheduleItem[] = list.map((item: RawItem, index: number) => ({
-          id: item.id ?? index,
-          work_date: item.work_date ?? item.date ?? "",
-          worker_name: item.worker_name ?? item.worker ?? item.name ?? "未設定",
-          site_name: item.site_name ?? item.site ?? item.genba ?? "-",
-          work_type: item.work_type ?? item.content ?? item.description ?? "-",
-        }));
+        const normalized: ScheduleItem[] = list.map(
+          (item: RawSchedule, index: number) => ({
+            id: item.id ?? index,
+            work_date: item.work_date ?? item.date ?? "",
+            worker_name: item.worker_name ?? item.worker ?? item.name ?? "未設定",
+            site_name: item.site_name ?? item.site ?? item.genba ?? "-",
+            work_type: item.work_type ?? item.content ?? item.description ?? "-",
+          })
+        );
 
         setItems(normalized.filter((item) => item.work_date));
       })
@@ -55,7 +61,9 @@ export default function HomePage() {
   }, []);
 
   const workerColorMap = useMemo(() => {
-    const workers = [...new Set(items.map((item) => item.worker_name).filter(Boolean))];
+    const workers = [
+      ...new Set(items.map((item) => item.worker_name).filter(Boolean)),
+    ];
 
     const palette = [
       "#ef4444",
@@ -88,6 +96,7 @@ export default function HomePage() {
   };
 
   const selectedDateStr = formatDateLocal(selectedDate);
+
   const selectedItems = items.filter((item) => item.work_date === selectedDateStr);
 
   return (
@@ -110,6 +119,7 @@ export default function HomePage() {
         現場管理ホーム
       </h1>
 
+      {/* メニュー */}
       <div
         style={{
           display: "grid",
@@ -139,6 +149,7 @@ export default function HomePage() {
         </Link>
       </div>
 
+      {/* カレンダー */}
       <div
         style={{
           background: "#fff",
@@ -204,6 +215,7 @@ export default function HomePage() {
         />
       </div>
 
+      {/* 作業員カラー一覧 */}
       <div
         style={{
           background: "#fff",
@@ -250,6 +262,7 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* 選択日の予定 */}
       <div
         style={{
           background: "#fff",
@@ -271,7 +284,9 @@ export default function HomePage() {
                 key={item.id}
                 style={{
                   border: "1px solid #e5e7eb",
-                  borderLeft: `8px solid ${workerColorMap[item.worker_name] || "#6b7280"}`,
+                  borderLeft: `8px solid ${
+                    workerColorMap[item.worker_name] || "#6b7280"
+                  }`,
                   borderRadius: "10px",
                   padding: "12px",
                   background: "#fff",
