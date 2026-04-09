@@ -4,6 +4,7 @@ import { supabase } from "../../../lib/supabase";
 
 export default function NewReportPage() {
   const [workers, setWorkers] = useState<any[]>([]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     report_date: "",
@@ -32,6 +33,27 @@ export default function NewReportPage() {
       return;
     }
 
+    let photoUrl = "";
+
+    if (photoFile) {
+      const fileName = `${Date.now()}-${photoFile.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("report-photos")
+        .upload(fileName, photoFile);
+
+      if (uploadError) {
+        alert("画像アップロードエラー: " + uploadError.message);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("report-photos")
+        .getPublicUrl(fileName);
+
+      photoUrl = data.publicUrl;
+    }
+
     const { error } = await supabase.from("reports").insert([
       {
         report_date: form.report_date,
@@ -40,6 +62,7 @@ export default function NewReportPage() {
         content: form.content,
         hours: form.hours,
         workers: form.workers,
+        photo_url: photoUrl,
       },
     ]);
 
@@ -55,6 +78,7 @@ export default function NewReportPage() {
         hours: "",
         workers: "",
       });
+      setPhotoFile(null);
     }
   };
 
@@ -71,7 +95,6 @@ export default function NewReportPage() {
           style={{ padding: "12px" }}
         />
 
-        {/* 作業員選択 */}
         <select
           name="worker_id"
           value={form.worker_id}
@@ -115,6 +138,17 @@ export default function NewReportPage() {
           placeholder="人数"
           value={form.workers}
           onChange={handleChange}
+          style={{ padding: "12px" }}
+        />
+
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              setPhotoFile(e.target.files[0]);
+            }
+          }}
           style={{ padding: "12px" }}
         />
 

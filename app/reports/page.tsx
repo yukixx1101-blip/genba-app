@@ -28,11 +28,33 @@ export default function ReportsPage() {
 
       <div style={{ display: "grid", gap: "12px" }}>
         {reports.map((r) => (
-          <div key={r.id} style={{ border: "1px solid #ccc", padding: "10px" }}>
+          <div
+            key={r.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "10px",
+              borderRadius: "10px",
+              background: "#fff",
+            }}
+          >
             <div>日付: {r.report_date}</div>
             <div>作業員: {r.workers?.name || "-"}</div>
             <div>現場: {r.site}</div>
             <div>内容: {r.content}</div>
+            <div>時間: {r.hours}</div>
+            <div>人数: {r.workers}</div>
+
+            {r.photo_url && (
+              <img
+                src={r.photo_url}
+                alt="現場写真"
+                style={{
+                  width: "100%",
+                  marginTop: "10px",
+                  borderRadius: "8px",
+                }}
+              />
+            )}
           </div>
         ))}
       </div>
