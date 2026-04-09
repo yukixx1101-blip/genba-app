@@ -53,7 +53,22 @@ export default function Home() {
         >
           日報登録
         </button>
-      </Link>
+      </Link><Link href="/photos">
+  <button
+    style={{
+      width: '100%',
+      padding: 14,
+      marginBottom: 12,
+      borderRadius: 10,
+      border: 'none',
+      background: '#0ea5e9',
+      color: '#fff',
+      fontSize: 16
+    }}
+  >
+    写真一覧
+  </button>
+</Link>
 
       <Link href="/schedules">
         <button

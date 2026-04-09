@@ -14,6 +14,7 @@ export default function NewReportPage() {
 
   const [date, setDate] = useState('')
   const [workerId, setWorkerId] = useState('')
+  const [siteName, setSiteName] = useState('')
   const [content, setContent] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [workers, setWorkers] = useState<Worker[]>([])
@@ -37,19 +38,24 @@ export default function NewReportPage() {
     setWorkers(data || [])
   }
 
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\\/:*?"<>|]/g, '_')
+  }
+
   const uploadPhoto = async () => {
     if (!photoFile) return null
 
     const fileExt = photoFile.name.split('.').pop()
+    const safeSiteName = sanitizeFolderName(siteName || '未分類')
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
-    const filePath = `reports/${fileName}`
+    const filePath = `${safeSiteName}/${fileName}`
 
     const { error: uploadError } = await supabase.storage
       .from('report-photos')
       .upload(filePath, photoFile)
 
     if (uploadError) {
-      throw new Error('写真アップロードエラー: ' + uploadError.message)
+      throw new Error('画像アップロードエラー: ' + uploadError.message)
     }
 
     const { data } = supabase.storage
@@ -61,6 +67,21 @@ export default function NewReportPage() {
 
   const handleSubmit = async () => {
     try {
+      if (!date) {
+        alert('日付を入力してください')
+        return
+      }
+
+      if (!siteName.trim()) {
+        alert('現場名を入力してください')
+        return
+      }
+
+      if (!content.trim()) {
+        alert('作業内容を入力してください')
+        return
+      }
+
       setLoading(true)
 
       let photoUrl: string | null = null
@@ -72,6 +93,7 @@ export default function NewReportPage() {
       const { error } = await supabase.from('reports').insert({
         date,
         worker_id: workerId || null,
+        site_name: siteName,
         content,
         photo_url: photoUrl
       })
@@ -99,6 +121,20 @@ export default function NewReportPage() {
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      />
+
+      <input
+        type="text"
+        placeholder="現場名"
+        value={siteName}
+        onChange={(e) => setSiteName(e.target.value)}
         style={{
           width: '100%',
           padding: 12,

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 type Report = {
   id: string
   date: string
+  site_name: string | null
   content: string
   photo_url: string | null
   workers: { name: string }[] | null
@@ -25,6 +26,7 @@ export default function ReportsPage() {
       .select(`
         id,
         date,
+        site_name,
         content,
         photo_url,
         workers(name)
@@ -77,6 +79,7 @@ export default function ReportsPage() {
             }}
           >
             <p>📅 {item.date}</p>
+            <p>🏗 {item.site_name || '未入力'}</p>
             <p>👷 {item.workers?.[0]?.name || '未選択'}</p>
             <p>📝 {item.content}</p>
 
