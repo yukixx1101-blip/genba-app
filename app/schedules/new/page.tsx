@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function NewSchedule() {
+  const router = useRouter()
   const [date, setDate] = useState('')
   const [site, setSite] = useState('')
   const [content, setContent] = useState('')
@@ -23,10 +25,7 @@ export default function NewSchedule() {
     }
 
     alert('登録完了')
-    setDate('')
-    setSite('')
-    setContent('')
-    setMemo('')
+    router.push('/schedules')
   }
 
   return (

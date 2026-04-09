@@ -1,82 +1,127 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+'use client'
 
-export const dynamic = "force-dynamic";
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function GET() {
-  try {
-    const { data, error } = await supabase
-      .from("schedules")
-      .select("*")
-      .order("work_date", { ascending: true })
-      .order("id", { ascending: true });
-
-    if (error) {
-      console.error("GET /api/schedules error:", error);
-      return NextResponse.json(
-        { error: "予定取得に失敗しました", detail: error.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(data ?? []);
-  } catch (error) {
-    console.error("GET /api/schedules catch:", error);
-    return NextResponse.json(
-      { error: "予定取得中にエラーが発生しました" },
-      { status: 500 }
-    );
-  }
+type Schedule = {
+  id: string
+  date: string
+  site_name: string
+  work_content: string
+  memo: string
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+export default function ScheduleList() {
+  const [data, setData] = useState<Schedule[]>([])
 
-    const work_date = body.work_date ?? body.date ?? "";
-    const worker_name = body.worker_name ?? body.worker ?? body.name ?? "";
-    const site_name = body.site_name ?? body.site ?? body.genba ?? "";
-    const work_type = body.work_type ?? body.content ?? body.description ?? "";
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-    if (!work_date || !worker_name) {
-      return NextResponse.json(
-        { error: "日付と作業員名は必須です" },
-        { status: 400 }
-      );
-    }
-
-    const insertData = {
-      work_date,
-      worker_name,
-      site_name,
-      work_type,
-    };
-
+  const fetchData = async () => {
     const { data, error } = await supabase
-      .from("schedules")
-      .insert([insertData])
-      .select()
-      .single();
+      .from('schedules')
+      .select('*')
+      .order('date', { ascending: true })
 
     if (error) {
-      console.error("POST /api/schedules error:", error);
-      return NextResponse.json(
-        { error: "予定登録に失敗しました", detail: error.message },
-        { status: 500 }
-      );
+      alert('取得エラー: ' + error.message)
+      return
     }
 
-    return NextResponse.json(data, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/schedules catch:", error);
-    return NextResponse.json(
-      { error: "予定登録中にエラーが発生しました" },
-      { status: 500 }
-    );
+    setData(data || [])
   }
+
+  const handleDelete = async (id: string) => {
+    const ok = confirm('削除しますか？')
+    if (!ok) return
+
+    const { error } = await supabase.from('schedules').delete().eq('id', id)
+
+    if (error) {
+      alert('削除エラー: ' + error.message)
+      return
+    }
+
+    fetchData()
+  }
+
+  return (
+    <div style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
+      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
+        スケジュール一覧
+      </h1>
+
+      <Link href="/schedules/new">
+        <button
+          style={{
+            width: '100%',
+            padding: 12,
+            marginBottom: 16,
+            borderRadius: 8,
+            border: 'none',
+            background: '#16a34a',
+            color: '#fff',
+            fontSize: 16
+          }}
+        >
+          ＋ スケジュール登録
+        </button>
+      </Link>
+
+      {data.length === 0 ? (
+        <p>まだ予定がありません</p>
+      ) : (
+        data.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              border: '1px solid #ccc',
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 12,
+              background: '#fff'
+            }}
+          >
+            <p>📅 {item.date}</p>
+            <p>🏗 {item.site_name}</p>
+            <p>🔧 {item.work_content}</p>
+            <p>📝 {item.memo || 'なし'}</p>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <Link href={`/schedules/${item.id}/edit`} style={{ flex: 1 }}>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: 10,
+                    background: '#2563eb',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6
+                  }}
+                >
+                  編集
+                </button>
+              </Link>
+
+              <button
+                onClick={() => handleDelete(item.id)}
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6
+                }}
+              >
+                削除
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
 }
