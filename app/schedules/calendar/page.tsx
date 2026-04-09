@@ -1,202 +1,193 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import Calendar from 'react-calendar'
-import 'react-calendar/dist/Calendar.css'
-import { supabase } from '@/lib/supabase'
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-type Schedule = {
-  id: string
-  date: string
-  site_name: string
-  work_content: string
-  memo: string
-}
+type RawSchedule = {
+  id?: string | number;
+  work_date?: string;
+  date?: string;
+  worker_name?: string;
+  worker?: string;
+  name?: string;
+  site_name?: string;
+  site?: string;
+  genba?: string;
+  work_type?: string;
+  content?: string;
+  description?: string;
+};
 
-export default function ScheduleCalendarPage() {
-  const [value, setValue] = useState<Date>(new Date())
-  const [data, setData] = useState<Schedule[]>([])
+type ScheduleItem = {
+  id: string | number;
+  work_date: string;
+  worker_name: string;
+  site_name: string;
+  work_type: string;
+};
+
+export default function SummaryPage() {
+  const [items, setItems] = useState<ScheduleItem[]>([]);
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  });
 
   useEffect(() => {
-    fetchSchedules()
-  }, [])
+    fetch("/api/schedules", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
 
-  const fetchSchedules = async () => {
-    const { data, error } = await supabase
-      .from('schedules')
-      .select('*')
-      .order('date', { ascending: true })
+        const normalized: ScheduleItem[] = list.map(
+          (item: RawSchedule, index: number) => ({
+            id: item.id ?? index,
+            work_date: item.work_date ?? item.date ?? "",
+            worker_name: item.worker_name ?? item.worker ?? item.name ?? "未設定",
+            site_name: item.site_name ?? item.site ?? item.genba ?? "-",
+            work_type: item.work_type ?? item.content ?? item.description ?? "-",
+          })
+        );
 
-    if (error) {
-      alert('取得エラー: ' + error.message)
-      return
-    }
+        setItems(normalized.filter((item) => item.work_date));
+      })
+      .catch((err) => {
+        console.error("予定取得エラー:", err);
+        setItems([]);
+      });
+  }, []);
 
-    setData(data || [])
-  }
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => item.work_date.startsWith(month));
+  }, [items, month]);
 
-  const formatDate = (date: Date) => {
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    return `${y}-${m}-${d}`
-  }
+  const groupedByWorker = useMemo(() => {
+    const map: Record<string, ScheduleItem[]> = {};
 
-  const selectedSchedules = useMemo(() => {
-    const dateText = formatDate(value)
-    return data.filter((item) => item.date === dateText)
-  }, [value, data])
+    filteredItems.forEach((item) => {
+      if (!map[item.worker_name]) {
+        map[item.worker_name] = [];
+      }
+      map[item.worker_name].push(item);
+    });
 
-  const hasSchedule = (date: Date) => {
-    const dateText = formatDate(date)
-    return data.some((item) => item.date === dateText)
-  }
-
-  const handleDelete = async (id: string) => {
-    const ok = confirm('この予定を削除しますか？')
-    if (!ok) return
-
-    const { error } = await supabase.from('schedules').delete().eq('id', id)
-
-    if (error) {
-      alert('削除エラー: ' + error.message)
-      return
-    }
-
-    alert('削除しました')
-    fetchSchedules()
-  }
+    return map;
+  }, [filteredItems]);
 
   return (
-    <div style={{ padding: 16, maxWidth: 700, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-        スケジュールカレンダー
-      </h1>
+    <main
+      style={{
+        maxWidth: "1000px",
+        margin: "0 auto",
+        padding: "16px",
+        minHeight: "100vh",
+        background: "#f3f4f6",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+          gap: "12px",
+          flexWrap: "wrap",
+        }}
+      >
+        <h1 style={{ fontSize: "24px", fontWeight: "bold" }}>月間まとめ</h1>
 
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-        <Link href="/schedules">
-          <button
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
             style={{
-              padding: 10,
-              borderRadius: 8,
-              border: 'none',
-              background: '#2563eb',
-              color: '#fff',
-              fontSize: 14
+              padding: "10px 12px",
+              borderRadius: "8px",
+              border: "1px solid #d1d5db",
+              background: "#fff",
+              fontSize: "16px",
+            }}
+          />
+
+          <Link
+            href="/"
+            style={{
+              textDecoration: "none",
+              background: "#6b7280",
+              color: "#fff",
+              padding: "10px 12px",
+              borderRadius: "8px",
             }}
           >
-            一覧へ戻る
-          </button>
-        </Link>
-
-        <Link href="/schedules/new">
-          <button
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: 'none',
-              background: '#16a34a',
-              color: '#fff',
-              fontSize: 14
-            }}
-          >
-            新規登録
-          </button>
-        </Link>
+            ホームへ
+          </Link>
+        </div>
       </div>
 
       <div
         style={{
-          background: '#fff',
-          padding: 12,
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "16px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}
       >
-        <Calendar
-          onChange={(nextValue) => setValue(nextValue as Date)}
-          value={value}
-          locale="ja-JP"
-          tileContent={({ date, view }) =>
-            view === 'month' && hasSchedule(date) ? (
+        {filteredItems.length === 0 ? (
+          <p>この月の予定はありません</p>
+        ) : (
+          <div style={{ display: "grid", gap: "16px" }}>
+            {Object.entries(groupedByWorker).map(([worker, workerItems]) => (
               <div
+                key={worker}
                 style={{
-                  marginTop: 2,
-                  fontSize: 10,
-                  color: '#ef4444',
-                  textAlign: 'center'
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  padding: "14px",
+                  background: "#fafafa",
                 }}
               >
-                ●
+                <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "10px" }}>
+                  {worker}（{workerItems.length}件）
+                </div>
+
+                <div style={{ display: "grid", gap: "8px" }}>
+                  {workerItems
+                    .slice()
+                    .sort((a, b) => a.work_date.localeCompare(b.work_date))
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          background: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "10px",
+                          padding: "10px 12px",
+                        }}
+                      >
+                        <div style={{ fontWeight: "bold", marginBottom: "4px" }}>
+                          {item.work_date}
+                        </div>
+                        <div style={{ fontSize: "14px", color: "#374151", marginBottom: "2px" }}>
+                          現場: {item.site_name || "-"}
+                        </div>
+                        <div style={{ fontSize: "14px", color: "#374151" }}>
+                          作業内容: {item.work_type || "-"}
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
-            ) : null
-          }
-        />
-      </div>
-
-      <div
-        style={{
-          marginTop: 20,
-          background: '#fff',
-          padding: 16,
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-        }}
-      >
-        <h2 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
-          {formatDate(value)} の予定
-        </h2>
-
-        {selectedSchedules.length === 0 ? (
-          <p>予定はありません</p>
-        ) : (
-          selectedSchedules.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                border: '1px solid #ddd',
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 10
-              }}
-            >
-              <p>🏗 {item.site_name}</p>
-              <p>🔧 {item.work_content}</p>
-              <p>📝 {item.memo || 'なし'}</p>
-
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <Link href={`/schedules/${item.id}/edit`}>
-                  <button
-                    style={{
-                      padding: 8,
-                      borderRadius: 6,
-                      border: 'none',
-                      background: '#2563eb',
-                      color: '#fff'
-                    }}
-                  >
-                    編集
-                  </button>
-                </Link>
-
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  style={{
-                    padding: 8,
-                    borderRadius: 6,
-                    border: 'none',
-                    background: '#ef4444',
-                    color: '#fff'
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
-    </div>
-  )
+    </main>
+  );
 }
