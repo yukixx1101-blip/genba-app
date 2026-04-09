@@ -9,9 +9,7 @@ type Report = {
   date: string
   content: string
   photo_url: string | null
-  workers?: {
-    name: string
-  } | null
+  workers: { name: string }[] | null
 }
 
 export default function ReportsPage() {
@@ -79,7 +77,7 @@ export default function ReportsPage() {
             }}
           >
             <p>📅 {item.date}</p>
-            <p>👷 {item.workers?.name || '未選択'}</p>
+            <p>👷 {item.workers?.[0]?.name || '未選択'}</p>
             <p>📝 {item.content}</p>
 
             {item.photo_url && (
