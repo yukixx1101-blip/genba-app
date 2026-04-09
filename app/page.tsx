@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
@@ -66,66 +67,33 @@ export default function HomePage() {
   const selectedItems = items.filter((item) => item.work_date === selectedDateStr);
 
   return (
-    <main
-      style={{
-        padding: "16px",
-        maxWidth: "1100px",
-        margin: "0 auto",
-        background: "#f3f4f6",
-        minHeight: "100vh",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "28px",
-          fontWeight: "bold",
-          marginBottom: "16px",
-        }}
-      >
-        現場管理ホーム
-      </h1>
+    <main style={mainStyle}>
+      <h1 style={pageTitleStyle}>現場管理ホーム</h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "12px",
-          marginBottom: "20px",
-        }}
-      >
+      <div style={menuGridStyle}>
         <Link href="/schedules/new" style={menuCard("#2563eb")}>
-          <div style={menuTitle}>スケジュール登録</div>
-          <div style={menuText}>新しい予定を追加</div>
+          <div style={menuTitleStyle}>スケジュール登録</div>
+          <div style={menuTextStyle}>新しい予定を追加</div>
         </Link>
 
         <Link href="/summary" style={menuCard("#16a34a")}>
-          <div style={menuTitle}>月間まとめ</div>
-          <div style={menuText}>月ごとの予定を確認</div>
+          <div style={menuTitleStyle}>月間まとめ</div>
+          <div style={menuTextStyle}>月ごとの予定を確認</div>
         </Link>
 
         <Link href="/reports" style={menuCard("#ea580c")}>
-          <div style={menuTitle}>日報一覧</div>
-          <div style={menuText}>登録済みの日報を見る</div>
+          <div style={menuTitleStyle}>日報一覧</div>
+          <div style={menuTextStyle}>登録済みの日報を見る</div>
         </Link>
 
         <Link href="/reports/new" style={menuCard("#7c3aed")}>
-          <div style={menuTitle}>日報作成</div>
-          <div style={menuText}>新しい日報を登録</div>
+          <div style={menuTitleStyle}>日報作成</div>
+          <div style={menuTextStyle}>新しい日報を登録</div>
         </Link>
       </div>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: "12px",
-          padding: "16px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          marginBottom: "20px",
-        }}
-      >
-        <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "12px" }}>
-          カレンダー
-        </h2>
+      <div style={cardStyle}>
+        <h2 style={sectionTitleStyle}>カレンダー</h2>
 
         <Calendar
           locale="ja-JP"
@@ -140,14 +108,7 @@ export default function HomePage() {
             if (dayItems.length === 0) return null;
 
             return (
-              <div
-                style={{
-                  marginTop: "4px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                }}
-              >
+              <div style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
                 {dayItems.slice(0, 3).map((item) => (
                   <div
                     key={item.id}
@@ -179,17 +140,8 @@ export default function HomePage() {
         />
       </div>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: "12px",
-          padding: "16px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h2 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "12px" }}>
-          {selectedDateStr} の予定
-        </h2>
+      <div style={cardStyle}>
+        <h2 style={sectionTitleStyle}>{selectedDateStr} の予定</h2>
 
         {selectedItems.length === 0 ? (
           <p>予定はありません</p>
@@ -224,7 +176,53 @@ export default function HomePage() {
   );
 }
 
-const menuCard = (bg: string) => ({
+const mainStyle: CSSProperties = {
+  padding: "16px",
+  maxWidth: "1100px",
+  margin: "0 auto",
+  background: "#f3f4f6",
+  minHeight: "100vh",
+};
+
+const pageTitleStyle: CSSProperties = {
+  fontSize: "28px",
+  fontWeight: "bold",
+  marginBottom: "16px",
+};
+
+const menuGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "12px",
+  marginBottom: "20px",
+};
+
+const cardStyle: CSSProperties = {
+  background: "#fff",
+  borderRadius: "12px",
+  padding: "16px",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  marginBottom: "20px",
+};
+
+const sectionTitleStyle: CSSProperties = {
+  fontSize: "20px",
+  fontWeight: "bold",
+  marginBottom: "12px",
+};
+
+const menuTitleStyle: CSSProperties = {
+  fontSize: "18px",
+  fontWeight: "bold",
+  marginBottom: "6px",
+};
+
+const menuTextStyle: CSSProperties = {
+  fontSize: "13px",
+  opacity: 0.95,
+};
+
+const menuCard = (bg: string): CSSProperties => ({
   display: "block",
   background: bg,
   color: "#fff",
@@ -233,14 +231,3 @@ const menuCard = (bg: string) => ({
   textDecoration: "none",
   boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
 });
-
-const menuTitle = {
-  fontSize: "18px",
-  fontWeight: "bold" as const,
-  marginBottom: "6px",
-};
-
-const menuText = {
-  fontSize: "13px",
-  opacity: 0.95,
-};
