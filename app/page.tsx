@@ -56,7 +56,7 @@ export default function Home() {
         </button>
       </Link>
 
-      {/* スケジュール（←ここ追加部分🔥） */}
+      {/* スケジュール */}
       <Link href="/schedules">
         <button
           style={{
@@ -90,21 +90,24 @@ export default function Home() {
           スケジュール登録
         </button>
       </Link>
+
+      {/* カレンダー（🔥ここ追加） */}
+      <Link href="/schedules/calendar">
+        <button
+          style={{
+            width: '100%',
+            padding: 14,
+            marginBottom: 12,
+            borderRadius: 10,
+            border: 'none',
+            background: '#8b5cf6',
+            color: '#fff',
+            fontSize: 16
+          }}
+        >
+          スケジュールカレンダー
+        </button>
+      </Link>
     </div>
   )
-}<Link href="/schedules/calendar">
-  <button
-    style={{
-      width: '100%',
-      padding: 14,
-      marginBottom: 12,
-      borderRadius: 10,
-      border: 'none',
-      background: '#8b5cf6',
-      color: '#fff',
-      fontSize: 16
-    }}
-  >
-    スケジュールカレンダー
-  </button>
-</Link>
+}
