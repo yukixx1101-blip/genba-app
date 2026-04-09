@@ -4,7 +4,7 @@ import { supabase } from "../../../lib/supabase";
 
 export default function NewReportPage() {
   const [workers, setWorkers] = useState<any[]>([]);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
 
   const [form, setForm] = useState({
     report_date: "",
@@ -33,53 +33,73 @@ export default function NewReportPage() {
       return;
     }
 
-    let photoUrl = "";
+    const { data: reportData, error: reportError } = await supabase
+      .from("reports")
+      .insert([
+        {
+          report_date: form.report_date,
+          worker_id: Number(form.worker_id),
+          site: form.site,
+          content: form.content,
+          hours: form.hours,
+          workers: form.workers,
+        },
+      ])
+      .select()
+      .single();
 
-    if (photoFile) {
-      const fileName = `${Date.now()}-${photoFile.name}`;
+    if (reportError || !reportData) {
+      alert("日報保存エラー: " + (reportError?.message || "不明なエラー"));
+      return;
+    }
 
-      const { error: uploadError } = await supabase.storage
-        .from("report-photos")
-        .upload(fileName, photoFile);
+    const reportId = reportData.id;
 
-      if (uploadError) {
-        alert("画像アップロードエラー: " + uploadError.message);
-        return;
+    if (photoFiles.length > 0) {
+      const photoRows: { report_id: number; photo_url: string }[] = [];
+
+      for (const file of photoFiles) {
+        const fileName = `${Date.now()}-${Math.random()}-${file.name}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("report-photos")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          alert("画像アップロードエラー: " + uploadError.message);
+          return;
+        }
+
+        const { data } = supabase.storage
+          .from("report-photos")
+          .getPublicUrl(fileName);
+
+        photoRows.push({
+          report_id: reportId,
+          photo_url: data.publicUrl,
+        });
       }
 
-      const { data } = supabase.storage
-        .from("report-photos")
-        .getPublicUrl(fileName);
+      const { error: photoInsertError } = await supabase
+        .from("report_photos")
+        .insert(photoRows);
 
-      photoUrl = data.publicUrl;
+      if (photoInsertError) {
+        alert("写真保存エラー: " + photoInsertError.message);
+        return;
+      }
     }
 
-    const { error } = await supabase.from("reports").insert([
-      {
-        report_date: form.report_date,
-        worker_id: Number(form.worker_id),
-        site: form.site,
-        content: form.content,
-        hours: form.hours,
-        workers: form.workers,
-        photo_url: photoUrl,
-      },
-    ]);
-
-    if (error) {
-      alert("エラー: " + error.message);
-    } else {
-      alert("保存しました！");
-      setForm({
-        report_date: "",
-        worker_id: "",
-        site: "",
-        content: "",
-        hours: "",
-        workers: "",
-      });
-      setPhotoFile(null);
-    }
+    alert("保存しました！");
+    setForm({
+      report_date: "",
+      worker_id: "",
+      site: "",
+      content: "",
+      hours: "",
+      workers: "",
+    });
+    setPhotoFiles([]);
   };
 
   return (
@@ -144,13 +164,20 @@ export default function NewReportPage() {
         <input
           type="file"
           accept="image/*"
+          multiple
           onChange={(e) => {
-            if (e.target.files && e.target.files[0]) {
-              setPhotoFile(e.target.files[0]);
+            if (e.target.files) {
+              setPhotoFiles(Array.from(e.target.files));
             }
           }}
           style={{ padding: "12px" }}
         />
+
+        {photoFiles.length > 0 && (
+          <div style={{ fontSize: "14px", color: "#555" }}>
+            {photoFiles.length}枚選択中
+          </div>
+        )}
 
         <button onClick={handleSubmit} style={{ padding: "14px" }}>
           保存

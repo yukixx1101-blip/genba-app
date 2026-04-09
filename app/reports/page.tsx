@@ -9,7 +9,7 @@ export default function ReportsPage() {
     const fetchReports = async () => {
       const { data, error } = await supabase
         .from("reports")
-        .select("*, workers(name)")
+        .select("*, workers(name), report_photos(photo_url)")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -44,16 +44,27 @@ export default function ReportsPage() {
             <div>時間: {r.hours}</div>
             <div>人数: {r.workers}</div>
 
-            {r.photo_url && (
-              <img
-                src={r.photo_url}
-                alt="現場写真"
+            {r.report_photos && r.report_photos.length > 0 && (
+              <div
                 style={{
-                  width: "100%",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "8px",
                   marginTop: "10px",
-                  borderRadius: "8px",
                 }}
-              />
+              >
+                {r.report_photos.map((p: any, index: number) => (
+                  <img
+                    key={index}
+                    src={p.photo_url}
+                    alt={`現場写真 ${index + 1}`}
+                    style={{
+                      width: "100%",
+                      borderRadius: "8px",
+                    }}
+                  />
+                ))}
+              </div>
             )}
           </div>
         ))}
