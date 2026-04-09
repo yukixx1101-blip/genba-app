@@ -53,13 +53,28 @@ export default function ScheduleCalendarPage() {
     return data.some((item) => item.date === dateText)
   }
 
+  const handleDelete = async (id: string) => {
+    const ok = confirm('この予定を削除しますか？')
+    if (!ok) return
+
+    const { error } = await supabase.from('schedules').delete().eq('id', id)
+
+    if (error) {
+      alert('削除エラー: ' + error.message)
+      return
+    }
+
+    alert('削除しました')
+    fetchSchedules()
+  }
+
   return (
     <div style={{ padding: 16, maxWidth: 700, margin: '0 auto' }}>
       <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
         スケジュールカレンダー
       </h1>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
         <Link href="/schedules">
           <button
             style={{
@@ -72,6 +87,21 @@ export default function ScheduleCalendarPage() {
             }}
           >
             一覧へ戻る
+          </button>
+        </Link>
+
+        <Link href="/schedules/new">
+          <button
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              border: 'none',
+              background: '#16a34a',
+              color: '#fff',
+              fontSize: 14
+            }}
+          >
+            新規登録
           </button>
         </Link>
       </div>
@@ -135,20 +165,34 @@ export default function ScheduleCalendarPage() {
               <p>🔧 {item.work_content}</p>
               <p>📝 {item.memo || 'なし'}</p>
 
-              <Link href={`/schedules/${item.id}/edit`}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <Link href={`/schedules/${item.id}/edit`}>
+                  <button
+                    style={{
+                      padding: 8,
+                      borderRadius: 6,
+                      border: 'none',
+                      background: '#2563eb',
+                      color: '#fff'
+                    }}
+                  >
+                    編集
+                  </button>
+                </Link>
+
                 <button
+                  onClick={() => handleDelete(item.id)}
                   style={{
-                    marginTop: 10,
                     padding: 8,
                     borderRadius: 6,
                     border: 'none',
-                    background: '#2563eb',
+                    background: '#ef4444',
                     color: '#fff'
                   }}
                 >
-                  編集
+                  削除
                 </button>
-              </Link>
+              </div>
             </div>
           ))
         )}
