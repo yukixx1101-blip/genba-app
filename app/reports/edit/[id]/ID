@@ -1,96 +1,186 @@
-"use client";
-import { useEffect, useState } from "react";
-import { supabase } from "../../../../lib/supabase";
-import { useRouter } from "next/navigation";
+'use client'
 
-export default function EditPage({ params }: any) {
-  const router = useRouter();
-  const [form, setForm] = useState<any>({
-    report_date: "",
-    site: "",
-    content: "",
-    hours: "",
-    workers: "",
-  });
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+
+type Worker = {
+  id: string
+  name: string
+}
+
+export default function EditReportPage() {
+  const params = useParams()
+  const router = useRouter()
+  const id = params.id as string
+
+  const [date, setDate] = useState('')
+  const [site, setSite] = useState('')
+  const [workerId, setWorkerId] = useState('')
+  const [content, setContent] = useState('')
+  const [workers, setWorkers] = useState<Worker[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await supabase
-        .from("reports")
-        .select("*")
-        .eq("id", params.id)
-        .single();
+    fetchWorkers()
+    fetchReport()
+  }, [])
 
-      if (data) setForm(data);
-    };
-
-    fetchData();
-  }, []);
-
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleUpdate = async () => {
-    const { error } = await supabase
-      .from("reports")
-      .update({
-        report_date: form.report_date,
-        site: form.site,
-        content: form.content,
-        hours: form.hours,
-        workers: form.workers,
-      })
-      .eq("id", params.id);
+  const fetchWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('id, name')
+      .order('name', { ascending: true })
 
     if (error) {
-      alert(error.message);
-    } else {
-      alert("更新しました");
-      router.push("/reports");
+      alert('作業員取得エラー: ' + error.message)
+      return
     }
-  };
+
+    setWorkers(data || [])
+  }
+
+  const fetchReport = async () => {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('id, date, site, worker_id, content')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      alert('日報取得エラー: ' + error.message)
+      return
+    }
+
+    if (data) {
+      setDate(data.date || '')
+      setSite(data.site || '')
+      setWorkerId(data.worker_id || '')
+      setContent(data.content || '')
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!date) {
+      alert('日付を入力してください')
+      return
+    }
+
+    if (!site.trim()) {
+      alert('現場名を入力してください')
+      return
+    }
+
+    if (!content.trim()) {
+      alert('作業内容を入力してください')
+      return
+    }
+
+    setLoading(true)
+
+    const { error } = await supabase
+      .from('reports')
+      .update({
+        date,
+        site,
+        worker_id: workerId || null,
+        content
+      })
+      .eq('id', id)
+
+    setLoading(false)
+
+    if (error) {
+      alert('更新エラー: ' + error.message)
+      return
+    }
+
+    alert('更新しました')
+    router.push('/reports')
+  }
 
   return (
-    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
-      <h1>編集</h1>
+    <div style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
+      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
+        日報編集
+      </h1>
 
-      <div style={{ display: "grid", gap: "12px" }}>
-        <input
-          type="date"
-          name="report_date"
-          value={form.report_date}
-          onChange={handleChange}
-        />
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      />
 
-        <input
-          name="site"
-          value={form.site}
-          onChange={handleChange}
-        />
+      <input
+        type="text"
+        placeholder="現場名"
+        value={site}
+        onChange={(e) => setSite(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      />
 
-        <input
-          name="content"
-          value={form.content}
-          onChange={handleChange}
-        />
+      <select
+        value={workerId}
+        onChange={(e) => setWorkerId(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      >
+        <option value="">作業員を選択</option>
+        {workers.map((worker) => (
+          <option key={worker.id} value={worker.id}>
+            {worker.name}
+          </option>
+        ))}
+      </select>
 
-        <input
-          name="hours"
-          value={form.hours}
-          onChange={handleChange}
-        />
+      <textarea
+        placeholder="作業内容"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        style={{
+          width: '100%',
+          minHeight: 120,
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      />
 
-        <input
-          name="workers"
-          value={form.workers}
-          onChange={handleChange}
-        />
-
-        <button onClick={handleUpdate}>
-          更新
-        </button>
-      </div>
-    </main>
-  );
+      <button
+        onClick={handleUpdate}
+        disabled={loading}
+        style={{
+          width: '100%',
+          padding: 12,
+          borderRadius: 8,
+          border: 'none',
+          background: '#2563eb',
+          color: '#fff',
+          fontSize: 16,
+          opacity: loading ? 0.7 : 1
+        }}
+      >
+        {loading ? '更新中...' : '更新'}
+      </button>
+    </div>
+  )
 }

@@ -51,6 +51,21 @@ export default function ReportsPage() {
     setWorkers((workersData as Worker[]) || [])
   }
 
+  const handleDelete = async (id: string) => {
+    const ok = confirm('この日報を削除しますか？')
+    if (!ok) return
+
+    const { error } = await supabase.from('reports').delete().eq('id', id)
+
+    if (error) {
+      alert('削除エラー: ' + error.message)
+      return
+    }
+
+    alert('削除しました')
+    fetchAll()
+  }
+
   const workerMap = useMemo(() => {
     const map: Record<string, string> = {}
     workers.forEach((worker) => {
@@ -112,6 +127,37 @@ export default function ReportsPage() {
                 }}
               />
             )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <Link href={`/reports/${item.id}/edit`} style={{ flex: 1 }}>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: 10,
+                    background: '#2563eb',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6
+                  }}
+                >
+                  編集
+                </button>
+              </Link>
+
+              <button
+                onClick={() => handleDelete(item.id)}
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6
+                }}
+              >
+                削除
+              </button>
+            </div>
           </div>
         ))
       )}
