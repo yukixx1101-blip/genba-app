@@ -1,68 +1,95 @@
-import Link from "next/link";
+'use client'
+
+import Link from 'next/link'
 
 export default function Home() {
   return (
-    <main
+    <div
       style={{
-        padding: "16px",
-        maxWidth: "480px",
-        margin: "0 auto",
-        fontFamily: "sans-serif",
+        padding: 16,
+        maxWidth: 600,
+        margin: '0 auto'
       }}
     >
-      <h1 style={{ fontSize: "28px", marginBottom: "16px" }}>
-        現場アプリ
+      <h1
+        style={{
+          fontSize: 24,
+          fontWeight: 'bold',
+          marginBottom: 20
+        }}
+      >
+        現場管理アプリ
       </h1>
 
-      <div style={{ display: "grid", gap: "12px" }}>
-        <Link
-          href="/reports/new"
+      {/* 日報 */}
+      <Link href="/reports">
+        <button
           style={{
-            display: "block",
-            padding: "16px",
-            borderRadius: "12px",
-            backgroundColor: "#111",
-            color: "#fff",
-            textAlign: "center",
-            textDecoration: "none",
-            fontSize: "18px",
+            width: '100%',
+            padding: 14,
+            marginBottom: 12,
+            borderRadius: 10,
+            border: 'none',
+            background: '#2563eb',
+            color: '#fff',
+            fontSize: 16
           }}
         >
-          日報を入力する
-        </Link>
+          日報一覧
+        </button>
+      </Link>
 
-        <Link
-          href="/reports"
+      <Link href="/reports/new">
+        <button
           style={{
-            display: "block",
-            padding: "16px",
-            borderRadius: "12px",
-            backgroundColor: "#eee",
-            color: "#111",
-            textAlign: "center",
-            textDecoration: "none",
-            fontSize: "18px",
+            width: '100%',
+            padding: 14,
+            marginBottom: 20,
+            borderRadius: 10,
+            border: 'none',
+            background: '#16a34a',
+            color: '#fff',
+            fontSize: 16
           }}
         >
-          日報一覧を見る
-        </Link>
+          日報登録
+        </button>
+      </Link>
 
-        <Link
-          href="/summary"
+      {/* スケジュール（←ここ追加部分🔥） */}
+      <Link href="/schedules">
+        <button
           style={{
-            display: "block",
-            padding: "16px",
-            borderRadius: "12px",
-            backgroundColor: "#0066cc",
-            color: "#fff",
-            textAlign: "center",
-            textDecoration: "none",
-            fontSize: "18px",
+            width: '100%',
+            padding: 14,
+            marginBottom: 12,
+            borderRadius: 10,
+            border: 'none',
+            background: '#f59e0b',
+            color: '#fff',
+            fontSize: 16
           }}
         >
-          作業員別月間まとめ
-        </Link>
-      </div>
-    </main>
-  );
+          スケジュール一覧
+        </button>
+      </Link>
+
+      <Link href="/schedules/new">
+        <button
+          style={{
+            width: '100%',
+            padding: 14,
+            marginBottom: 12,
+            borderRadius: 10,
+            border: 'none',
+            background: '#ef4444',
+            color: '#fff',
+            fontSize: 16
+          }}
+        >
+          スケジュール登録
+        </button>
+      </Link>
+    </div>
+  )
 }
