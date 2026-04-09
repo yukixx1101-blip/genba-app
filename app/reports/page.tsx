@@ -1,137 +1,101 @@
-"use client";
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
-import { useRouter } from "next/navigation";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+'use client'
+
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+
+type Report = {
+  id: string
+  date: string
+  content: string
+  photo_url: string | null
+  workers?: {
+    name: string
+  } | null
+}
 
 export default function ReportsPage() {
-  const [reports, setReports] = useState<any[]>([]);
-  const router = useRouter();
+  const [reports, setReports] = useState<Report[]>([])
+
+  useEffect(() => {
+    fetchReports()
+  }, [])
 
   const fetchReports = async () => {
     const { data, error } = await supabase
-      .from("reports")
+      .from('reports')
       .select(`
-        *,
-        worker:workers(name)
+        id,
+        date,
+        content,
+        photo_url,
+        workers(name)
       `)
-      .order("created_at", { ascending: false });
+      .order('date', { ascending: false })
 
     if (error) {
-      alert(error.message);
-    } else {
-      setReports(data || []);
+      alert('取得エラー: ' + error.message)
+      return
     }
-  };
 
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("削除しますか？")) return;
-
-    const { error } = await supabase
-      .from("reports")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("削除エラー: " + error.message);
-    } else {
-      alert("削除しました");
-      fetchReports();
-    }
-  };
-
-  const handlePdf = (report: any) => {
-    const doc = new jsPDF();
-
-    doc.setFontSize(18);
-    doc.text("日報", 14, 20);
-
-    autoTable(doc, {
-      startY: 30,
-      head: [["項目", "内容"]],
-      body: [
-        ["日付", report.report_date || "-"],
-        ["作業員", report.worker?.name || "-"],
-        ["現場", report.site || "-"],
-        ["作業内容", report.content || "-"],
-        ["作業時間", report.hours || "-"],
-        ["人数", report.workers || "-"],
-      ],
-    });
-
-    doc.save(`report-${report.id}.pdf`);
-  };
+    setReports((data as Report[]) || [])
+  }
 
   return (
-    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
-      <h1>日報一覧</h1>
+    <div style={{ padding: 16, maxWidth: 700, margin: '0 auto' }}>
+      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
+        日報一覧
+      </h1>
 
-      <div style={{ display: "grid", gap: "12px" }}>
-        {reports.map((r) => (
+      <Link href="/reports/new">
+        <button
+          style={{
+            width: '100%',
+            padding: 12,
+            marginBottom: 16,
+            borderRadius: 8,
+            border: 'none',
+            background: '#16a34a',
+            color: '#fff',
+            fontSize: 16
+          }}
+        >
+          ＋ 日報登録
+        </button>
+      </Link>
+
+      {reports.length === 0 ? (
+        <p>まだ日報がありません</p>
+      ) : (
+        reports.map((item) => (
           <div
-            key={r.id}
+            key={item.id}
             style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              borderRadius: "10px",
-              background: "#fff",
+              border: '1px solid #ddd',
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 12,
+              background: '#fff'
             }}
           >
-            <div>日付: {r.report_date}</div>
-            <div>作業員: {r.worker?.name || "-"}</div>
-            <div>現場: {r.site}</div>
-            <div>内容: {r.content}</div>
-            <div>時間: {r.hours}</div>
-            <div>人数: {r.workers}</div>
+            <p>📅 {item.date}</p>
+            <p>👷 {item.workers?.name || '未選択'}</p>
+            <p>📝 {item.content}</p>
 
-            <div style={{ marginTop: "10px", display: "grid", gap: "8px" }}>
-              <button
-                onClick={() => router.push(`/reports/edit/${r.id}`)}
+            {item.photo_url && (
+              <img
+                src={item.photo_url}
+                alt="日報写真"
                 style={{
-                  padding: "10px",
-                  background: "#333",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
+                  width: '100%',
+                  marginTop: 12,
+                  borderRadius: 8
                 }}
-              >
-                編集
-              </button>
-
-              <button
-                onClick={() => handleDelete(r.id)}
-                style={{
-                  padding: "10px",
-                  background: "red",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                }}
-              >
-                削除
-              </button>
-
-              <button
-                onClick={() => handlePdf(r)}
-                style={{
-                  padding: "10px",
-                  background: "#0066cc",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                }}
-              >
-                PDF出力
-              </button>
-            </div>
+              />
+            )}
           </div>
-        ))}
-      </div>
-    </main>
-  );
+        ))
+      )}
+    </div>
+  )
 }

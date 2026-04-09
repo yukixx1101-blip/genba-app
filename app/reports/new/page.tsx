@@ -1,188 +1,172 @@
-"use client";
-import { useState, useEffect } from "react";
-import { supabase } from "../../../lib/supabase";
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+
+type Worker = {
+  id: string
+  name: string
+}
 
 export default function NewReportPage() {
-  const [workers, setWorkers] = useState<any[]>([]);
-  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const router = useRouter()
 
-  const [form, setForm] = useState({
-    report_date: "",
-    worker_id: "",
-    site: "",
-    content: "",
-    hours: "",
-    workers: "",
-  });
+  const [date, setDate] = useState('')
+  const [workerId, setWorkerId] = useState('')
+  const [content, setContent] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [workers, setWorkers] = useState<Worker[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const fetchWorkers = async () => {
-      const { data } = await supabase.from("workers").select("*");
-      setWorkers(data || []);
-    };
-    fetchWorkers();
-  }, []);
+    fetchWorkers()
+  }, [])
 
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const fetchWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('id, name')
+      .order('name', { ascending: true })
+
+    if (error) {
+      alert('作業員取得エラー: ' + error.message)
+      return
+    }
+
+    setWorkers(data || [])
+  }
+
+  const uploadPhoto = async () => {
+    if (!photoFile) return null
+
+    const fileExt = photoFile.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+    const filePath = `reports/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('report-photos')
+      .upload(filePath, photoFile)
+
+    if (uploadError) {
+      throw new Error('写真アップロードエラー: ' + uploadError.message)
+    }
+
+    const { data } = supabase.storage
+      .from('report-photos')
+      .getPublicUrl(filePath)
+
+    return data.publicUrl
+  }
 
   const handleSubmit = async () => {
-    if (!form.report_date || !form.worker_id || !form.site || !form.content) {
-      alert("日付・作業員・現場名・作業内容を入れてください");
-      return;
-    }
+    try {
+      setLoading(true)
 
-    const { data: reportData, error: reportError } = await supabase
-      .from("reports")
-      .insert([
-        {
-          report_date: form.report_date,
-          worker_id: Number(form.worker_id),
-          site: form.site,
-          content: form.content,
-          hours: form.hours,
-          workers: form.workers,
-        },
-      ])
-      .select()
-      .single();
+      let photoUrl: string | null = null
 
-    if (reportError || !reportData) {
-      alert("日報保存エラー: " + (reportError?.message || "不明なエラー"));
-      return;
-    }
-
-    const reportId = reportData.id;
-
-    if (photoFiles.length > 0) {
-      const photoRows: { report_id: number; photo_url: string }[] = [];
-
-      for (const file of photoFiles) {
-        const fileName = `${Date.now()}-${Math.random()}-${file.name}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("report-photos")
-          .upload(fileName, file);
-
-        if (uploadError) {
-          alert("画像アップロードエラー: " + uploadError.message);
-          return;
-        }
-
-        const { data } = supabase.storage
-          .from("report-photos")
-          .getPublicUrl(fileName);
-
-        photoRows.push({
-          report_id: reportId,
-          photo_url: data.publicUrl,
-        });
+      if (photoFile) {
+        photoUrl = await uploadPhoto()
       }
 
-      const { error: photoInsertError } = await supabase
-        .from("report_photos")
-        .insert(photoRows);
+      const { error } = await supabase.from('reports').insert({
+        date,
+        worker_id: workerId || null,
+        content,
+        photo_url: photoUrl
+      })
 
-      if (photoInsertError) {
-        alert("写真保存エラー: " + photoInsertError.message);
-        return;
+      if (error) {
+        throw new Error('日報保存エラー: ' + error.message)
       }
-    }
 
-    alert("保存しました！");
-    setForm({
-      report_date: "",
-      worker_id: "",
-      site: "",
-      content: "",
-      hours: "",
-      workers: "",
-    });
-    setPhotoFiles([]);
-  };
+      alert('日報を保存しました')
+      router.push('/reports')
+    } catch (error: any) {
+      alert(error.message || '保存に失敗しました')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
-      <h1>日報入力</h1>
+    <div style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
+      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
+        日報登録
+      </h1>
 
-      <div style={{ display: "grid", gap: "12px" }}>
-        <input
-          type="date"
-          name="report_date"
-          value={form.report_date}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        />
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      />
 
-        <select
-          name="worker_id"
-          value={form.worker_id}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        >
-          <option value="">作業員を選択</option>
-          {workers.map((w) => (
-            <option key={w.id} value={w.id}>
-              {w.name}
-            </option>
-          ))}
-        </select>
+      <select
+        value={workerId}
+        onChange={(e) => setWorkerId(e.target.value)}
+        style={{
+          width: '100%',
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      >
+        <option value="">作業員を選択</option>
+        {workers.map((worker) => (
+          <option key={worker.id} value={worker.id}>
+            {worker.name}
+          </option>
+        ))}
+      </select>
 
-        <input
-          name="site"
-          placeholder="現場名"
-          value={form.site}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        />
+      <textarea
+        placeholder="作業内容"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        style={{
+          width: '100%',
+          minHeight: 120,
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 16,
+          boxSizing: 'border-box'
+        }}
+      />
 
-        <input
-          name="content"
-          placeholder="作業内容"
-          value={form.content}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+        style={{
+          width: '100%',
+          marginBottom: 16
+        }}
+      />
 
-        <input
-          name="hours"
-          placeholder="作業時間"
-          value={form.hours}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        />
-
-        <input
-          name="workers"
-          placeholder="人数"
-          value={form.workers}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        />
-
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            if (e.target.files) {
-              setPhotoFiles(Array.from(e.target.files));
-            }
-          }}
-          style={{ padding: "12px" }}
-        />
-
-        {photoFiles.length > 0 && (
-          <div style={{ fontSize: "14px", color: "#555" }}>
-            {photoFiles.length}枚選択中
-          </div>
-        )}
-
-        <button onClick={handleSubmit} style={{ padding: "14px" }}>
-          保存
-        </button>
-      </div>
-    </main>
-  );
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        style={{
+          width: '100%',
+          padding: 12,
+          borderRadius: 8,
+          border: 'none',
+          background: '#2563eb',
+          color: '#fff',
+          fontSize: 16,
+          opacity: loading ? 0.7 : 1
+        }}
+      >
+        {loading ? '保存中...' : '保存'}
+      </button>
+    </div>
+  )
 }
