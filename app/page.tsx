@@ -92,4 +92,19 @@ export default function Home() {
       </Link>
     </div>
   )
-}
+}<Link href="/schedules/calendar">
+  <button
+    style={{
+      width: '100%',
+      padding: 14,
+      marginBottom: 12,
+      borderRadius: 10,
+      border: 'none',
+      background: '#8b5cf6',
+      color: '#fff',
+      fontSize: 16
+    }}
+  >
+    スケジュールカレンダー
+  </button>
+</Link>
