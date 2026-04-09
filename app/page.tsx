@@ -5,12 +5,27 @@ import { useEffect, useMemo, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
+type RawItem = {
+  id?: string | number;
+  work_date?: string;
+  date?: string;
+  worker_name?: string;
+  worker?: string;
+  name?: string;
+  site_name?: string;
+  site?: string;
+  genba?: string;
+  work_type?: string;
+  content?: string;
+  description?: string;
+};
+
 type ScheduleItem = {
   id: string | number;
   work_date: string;
   worker_name: string;
-  site_name?: string;
-  work_type?: string;
+  site_name: string;
+  work_type: string;
 };
 
 export default function HomePage() {
@@ -18,10 +33,20 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   useEffect(() => {
-    fetch("/api/schedules")
+    fetch("/api/schedules", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        setItems(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+
+        const normalized: ScheduleItem[] = list.map((item: RawItem, index: number) => ({
+          id: item.id ?? index,
+          work_date: item.work_date ?? item.date ?? "",
+          worker_name: item.worker_name ?? item.worker ?? item.name ?? "未設定",
+          site_name: item.site_name ?? item.site ?? item.genba ?? "-",
+          work_type: item.work_type ?? item.content ?? item.description ?? "-",
+        }));
+
+        setItems(normalized.filter((item) => item.work_date));
       })
       .catch((err) => {
         console.error("予定取得エラー:", err);
@@ -48,7 +73,6 @@ export default function HomePage() {
     ];
 
     const map: Record<string, string> = {};
-
     workers.forEach((worker, index) => {
       map[worker] = palette[index % palette.length];
     });
@@ -86,7 +110,6 @@ export default function HomePage() {
         現場管理ホーム
       </h1>
 
-      {/* メニュー */}
       <div
         style={{
           display: "grid",
@@ -95,40 +118,27 @@ export default function HomePage() {
           marginBottom: "20px",
         }}
       >
-        <Link
-          href="/new"
-          style={menuCard("#2563eb")}
-        >
+        <Link href="/new" style={menuCard("#2563eb")}>
           <div style={menuTitle}>スケジュール登録</div>
           <div style={menuText}>新しい予定を追加</div>
         </Link>
 
-        <Link
-          href="/monthly"
-          style={menuCard("#16a34a")}
-        >
+        <Link href="/monthly" style={menuCard("#16a34a")}>
           <div style={menuTitle}>月間まとめ</div>
           <div style={menuText}>月ごとの予定を確認</div>
         </Link>
 
-        <Link
-          href="/reports"
-          style={menuCard("#ea580c")}
-        >
+        <Link href="/reports" style={menuCard("#ea580c")}>
           <div style={menuTitle}>日報一覧</div>
           <div style={menuText}>登録済みの日報を見る</div>
         </Link>
 
-        <Link
-          href="/reports/new"
-          style={menuCard("#7c3aed")}
-        >
+        <Link href="/reports/new" style={menuCard("#7c3aed")}>
           <div style={menuTitle}>日報作成</div>
           <div style={menuText}>新しい日報を登録</div>
         </Link>
       </div>
 
-      {/* カレンダー */}
       <div
         style={{
           background: "#fff",
@@ -177,7 +187,7 @@ export default function HomePage() {
                       whiteSpace: "nowrap",
                       textOverflow: "ellipsis",
                     }}
-                    title={`${item.worker_name} / ${item.site_name ?? ""}`}
+                    title={`${item.worker_name} / ${item.site_name}`}
                   >
                     {item.worker_name}
                   </div>
@@ -194,7 +204,6 @@ export default function HomePage() {
         />
       </div>
 
-      {/* 作業員カラー */}
       <div
         style={{
           background: "#fff",
@@ -241,7 +250,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* 選択日の予定 */}
       <div
         style={{
           background: "#fff",
