@@ -64,45 +64,71 @@ export default function HomePage() {
   };
 
   const selectedDateStr = formatDateLocal(selectedDate);
-
   const selectedItems = items.filter((item) => item.work_date === selectedDateStr);
 
   return (
-    <main style={{ padding: "16px", maxWidth: "1000px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>
-        現場スケジュール
+    <main
+      style={{
+        padding: "16px",
+        maxWidth: "1100px",
+        margin: "0 auto",
+        background: "#f3f4f6",
+        minHeight: "100vh",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "28px",
+          fontWeight: "bold",
+          marginBottom: "16px",
+        }}
+      >
+        現場管理ホーム
       </h1>
 
-      <div style={{ marginBottom: "16px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+      {/* メニュー */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "12px",
+          marginBottom: "20px",
+        }}
+      >
         <Link
           href="/new"
-          style={{
-            padding: "10px 14px",
-            background: "#2563eb",
-            color: "#fff",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: "bold",
-          }}
+          style={menuCard("#2563eb")}
         >
-          新規登録
+          <div style={menuTitle}>スケジュール登録</div>
+          <div style={menuText}>新しい予定を追加</div>
         </Link>
 
         <Link
           href="/monthly"
-          style={{
-            padding: "10px 14px",
-            background: "#16a34a",
-            color: "#fff",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: "bold",
-          }}
+          style={menuCard("#16a34a")}
         >
-          月間まとめ
+          <div style={menuTitle}>月間まとめ</div>
+          <div style={menuText}>月ごとの予定を確認</div>
+        </Link>
+
+        <Link
+          href="/reports"
+          style={menuCard("#ea580c")}
+        >
+          <div style={menuTitle}>日報一覧</div>
+          <div style={menuText}>登録済みの日報を見る</div>
+        </Link>
+
+        <Link
+          href="/reports/new"
+          style={menuCard("#7c3aed")}
+        >
+          <div style={menuTitle}>日報作成</div>
+          <div style={menuText}>新しい日報を登録</div>
         </Link>
       </div>
 
+      {/* カレンダー */}
       <div
         style={{
           background: "#fff",
@@ -112,6 +138,10 @@ export default function HomePage() {
           marginBottom: "20px",
         }}
       >
+        <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "12px" }}>
+          カレンダー
+        </h2>
+
         <Calendar
           locale="ja-JP"
           onChange={(value) => setSelectedDate(value as Date)}
@@ -125,7 +155,14 @@ export default function HomePage() {
             if (dayItems.length === 0) return null;
 
             return (
-              <div style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
+              <div
+                style={{
+                  marginTop: "4px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                }}
+              >
                 {dayItems.slice(0, 3).map((item) => (
                   <div
                     key={item.id}
@@ -157,6 +194,7 @@ export default function HomePage() {
         />
       </div>
 
+      {/* 作業員カラー */}
       <div
         style={{
           background: "#fff",
@@ -171,7 +209,7 @@ export default function HomePage() {
         </h2>
 
         {Object.keys(workerColorMap).length === 0 ? (
-          <p>まだデータがありません</p>
+          <p>まだ予定データがありません</p>
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
             {Object.entries(workerColorMap).map(([worker, color]) => (
@@ -203,6 +241,7 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* 選択日の予定 */}
       <div
         style={{
           background: "#fff",
@@ -247,3 +286,24 @@ export default function HomePage() {
     </main>
   );
 }
+
+const menuCard = (bg: string) => ({
+  display: "block",
+  background: bg,
+  color: "#fff",
+  borderRadius: "12px",
+  padding: "16px",
+  textDecoration: "none",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+});
+
+const menuTitle = {
+  fontSize: "18px",
+  fontWeight: "bold" as const,
+  marginBottom: "6px",
+};
+
+const menuText = {
+  fontSize: "13px",
+  opacity: 0.95,
+};
