@@ -96,7 +96,6 @@ export default function HomePage() {
   };
 
   const selectedDateStr = formatDateLocal(selectedDate);
-
   const selectedItems = items.filter((item) => item.work_date === selectedDateStr);
 
   return (
@@ -119,7 +118,6 @@ export default function HomePage() {
         現場管理ホーム
       </h1>
 
-      {/* メニュー */}
       <div
         style={{
           display: "grid",
@@ -133,7 +131,7 @@ export default function HomePage() {
           <div style={menuText}>新しい予定を追加</div>
         </Link>
 
-        <Link href="/monthly" style={menuCard("#16a34a")}>
+        <Link href="/summary" style={menuCard("#16a34a")}>
           <div style={menuTitle}>月間まとめ</div>
           <div style={menuText}>月ごとの予定を確認</div>
         </Link>
@@ -149,7 +147,6 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* カレンダー */}
       <div
         style={{
           background: "#fff",
@@ -215,7 +212,6 @@ export default function HomePage() {
         />
       </div>
 
-      {/* 作業員カラー一覧 */}
       <div
         style={{
           background: "#fff",
@@ -262,7 +258,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* 選択日の予定 */}
       <div
         style={{
           background: "#fff",
