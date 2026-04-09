@@ -1,29 +1,41 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 
 export default function NewReportPage() {
+  const [workers, setWorkers] = useState<any[]>([]);
+
   const [form, setForm] = useState({
     report_date: "",
+    worker_id: "",
     site: "",
     content: "",
     hours: "",
     workers: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      const { data } = await supabase.from("workers").select("*");
+      setWorkers(data || []);
+    };
+    fetchWorkers();
+  }, []);
+
+  const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
-    if (!form.report_date || !form.site || !form.content) {
-      alert("日付・現場名・作業内容を入れてください");
+    if (!form.report_date || !form.worker_id || !form.site || !form.content) {
+      alert("日付・作業員・現場名・作業内容を入れてください");
       return;
     }
 
     const { error } = await supabase.from("reports").insert([
       {
         report_date: form.report_date,
+        worker_id: Number(form.worker_id),
         site: form.site,
         content: form.content,
         hours: form.hours,
@@ -37,6 +49,7 @@ export default function NewReportPage() {
       alert("保存しました！");
       setForm({
         report_date: "",
+        worker_id: "",
         site: "",
         content: "",
         hours: "",
@@ -46,15 +59,8 @@ export default function NewReportPage() {
   };
 
   return (
-    <main
-      style={{
-        padding: "16px",
-        maxWidth: "480px",
-        margin: "0 auto",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <h1 style={{ fontSize: "28px", marginBottom: "16px" }}>日報入力</h1>
+    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
+      <h1>日報入力</h1>
 
       <div style={{ display: "grid", gap: "12px" }}>
         <input
@@ -62,25 +68,30 @@ export default function NewReportPage() {
           name="report_date"
           value={form.report_date}
           onChange={handleChange}
-          style={{
-            padding: "14px",
-            fontSize: "16px",
-            borderRadius: "10px",
-            border: "1px solid #ccc",
-          }}
+          style={{ padding: "12px" }}
         />
+
+        {/* 作業員選択 */}
+        <select
+          name="worker_id"
+          value={form.worker_id}
+          onChange={handleChange}
+          style={{ padding: "12px" }}
+        >
+          <option value="">作業員を選択</option>
+          {workers.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </select>
 
         <input
           name="site"
           placeholder="現場名"
           value={form.site}
           onChange={handleChange}
-          style={{
-            padding: "14px",
-            fontSize: "16px",
-            borderRadius: "10px",
-            border: "1px solid #ccc",
-          }}
+          style={{ padding: "12px" }}
         />
 
         <input
@@ -88,12 +99,7 @@ export default function NewReportPage() {
           placeholder="作業内容"
           value={form.content}
           onChange={handleChange}
-          style={{
-            padding: "14px",
-            fontSize: "16px",
-            borderRadius: "10px",
-            border: "1px solid #ccc",
-          }}
+          style={{ padding: "12px" }}
         />
 
         <input
@@ -101,12 +107,7 @@ export default function NewReportPage() {
           placeholder="作業時間"
           value={form.hours}
           onChange={handleChange}
-          style={{
-            padding: "14px",
-            fontSize: "16px",
-            borderRadius: "10px",
-            border: "1px solid #ccc",
-          }}
+          style={{ padding: "12px" }}
         />
 
         <input
@@ -114,28 +115,11 @@ export default function NewReportPage() {
           placeholder="人数"
           value={form.workers}
           onChange={handleChange}
-          style={{
-            padding: "14px",
-            fontSize: "16px",
-            borderRadius: "10px",
-            border: "1px solid #ccc",
-          }}
+          style={{ padding: "12px" }}
         />
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          style={{
-            padding: "16px",
-            fontSize: "18px",
-            borderRadius: "12px",
-            border: "none",
-            backgroundColor: "#111",
-            color: "#fff",
-            fontWeight: "bold",
-          }}
-        >
-          保存する
+        <button onClick={handleSubmit} style={{ padding: "14px" }}>
+          保存
         </button>
       </div>
     </main>
