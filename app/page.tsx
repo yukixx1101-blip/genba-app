@@ -11,7 +11,7 @@ export default function Home() {
       }}
     >
       <h1 style={{ fontSize: "28px", marginBottom: "16px" }}>
-        現場日報アプリ
+        現場アプリ
       </h1>
 
       <div style={{ display: "grid", gap: "12px" }}>
