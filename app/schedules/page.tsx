@@ -20,17 +20,20 @@ export default function ScheduleList() {
   }, [])
 
   const fetchData = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('schedules')
-      .select('id, date, site_name, work_content, memo')
+      .select('*')
       .order('date', { ascending: true })
 
-    if (error) {
-      alert('取得エラー: ' + error.message)
-      return
-    }
-
     setData(data || [])
+  }
+
+  const handleDelete = async (id: string) => {
+    const ok = confirm('削除しますか？')
+    if (!ok) return
+
+    await supabase.from('schedules').delete().eq('id', id)
+    fetchData()
   }
 
   return (
@@ -56,27 +59,54 @@ export default function ScheduleList() {
         </button>
       </Link>
 
-      {data.length === 0 ? (
-        <p>まだ予定がありません</p>
-      ) : (
-        data.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: 12,
-              marginBottom: 12,
-              background: '#fff'
-            }}
-          >
-            <p>📅 {item.date}</p>
-            <p>🏗 {item.site_name}</p>
-            <p>🔧 {item.work_content}</p>
-            <p>📝 {item.memo || 'なし'}</p>
+      {data.map((item) => (
+        <div
+          key={item.id}
+          style={{
+            border: '1px solid #ccc',
+            borderRadius: 8,
+            padding: 12,
+            marginBottom: 12
+          }}
+        >
+          <p>📅 {item.date}</p>
+          <p>🏗 {item.site_name}</p>
+          <p>🔧 {item.work_content}</p>
+          <p>📝 {item.memo}</p>
+
+          {/* ボタン */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <Link href={`/schedules/${item.id}/edit`}>
+              <button
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  background: '#2563eb',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6
+                }}
+              >
+                編集
+              </button>
+            </Link>
+
+            <button
+              onClick={() => handleDelete(item.id)}
+              style={{
+                flex: 1,
+                padding: 10,
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6
+              }}
+            >
+              削除
+            </button>
           </div>
-        ))
-      )}
+        </div>
+      ))}
     </div>
   )
 }
