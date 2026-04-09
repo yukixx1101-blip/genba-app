@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<any[]>([]);
@@ -43,6 +45,28 @@ export default function ReportsPage() {
     }
   };
 
+  const handlePdf = (report: any) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("日報", 14, 20);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [["項目", "内容"]],
+      body: [
+        ["日付", report.report_date || "-"],
+        ["作業員", report.worker?.name || "-"],
+        ["現場", report.site || "-"],
+        ["作業内容", report.content || "-"],
+        ["作業時間", report.hours || "-"],
+        ["人数", report.workers || "-"],
+      ],
+    });
+
+    doc.save(`report-${report.id}.pdf`);
+  };
+
   return (
     <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
       <h1>日報一覧</h1>
@@ -62,13 +86,13 @@ export default function ReportsPage() {
             <div>作業員: {r.worker?.name || "-"}</div>
             <div>現場: {r.site}</div>
             <div>内容: {r.content}</div>
+            <div>時間: {r.hours}</div>
+            <div>人数: {r.workers}</div>
 
-            {/* ボタン */}
-            <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+            <div style={{ marginTop: "10px", display: "grid", gap: "8px" }}>
               <button
                 onClick={() => router.push(`/reports/edit/${r.id}`)}
                 style={{
-                  flex: 1,
                   padding: "10px",
                   background: "#333",
                   color: "#fff",
@@ -82,7 +106,6 @@ export default function ReportsPage() {
               <button
                 onClick={() => handleDelete(r.id)}
                 style={{
-                  flex: 1,
                   padding: "10px",
                   background: "red",
                   color: "#fff",
@@ -91,6 +114,19 @@ export default function ReportsPage() {
                 }}
               >
                 削除
+              </button>
+
+              <button
+                onClick={() => handlePdf(r)}
+                style={{
+                  padding: "10px",
+                  background: "#0066cc",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                }}
+              >
+                PDF出力
               </button>
             </div>
           </div>

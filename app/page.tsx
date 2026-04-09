@@ -10,13 +10,9 @@ export default function Home() {
         fontFamily: "sans-serif",
       }}
     >
-      <h1 style={{ fontSize: "28px", marginBottom: "8px" }}>
+      <h1 style={{ fontSize: "28px", marginBottom: "16px" }}>
         現場日報アプリ
       </h1>
-
-      <p style={{ color: "#555", marginBottom: "20px" }}>
-        スマホで使いやすいシンプル版
-      </p>
 
       <div style={{ display: "grid", gap: "12px" }}>
         <Link
@@ -30,7 +26,6 @@ export default function Home() {
             textAlign: "center",
             textDecoration: "none",
             fontSize: "18px",
-            fontWeight: "bold",
           }}
         >
           日報を入力する
@@ -42,16 +37,30 @@ export default function Home() {
             display: "block",
             padding: "16px",
             borderRadius: "12px",
-            backgroundColor: "#fff",
+            backgroundColor: "#eee",
             color: "#111",
             textAlign: "center",
             textDecoration: "none",
             fontSize: "18px",
-            fontWeight: "bold",
-            border: "1px solid #ddd",
           }}
         >
           日報一覧を見る
+        </Link>
+
+        <Link
+          href="/summary"
+          style={{
+            display: "block",
+            padding: "16px",
+            borderRadius: "12px",
+            backgroundColor: "#0066cc",
+            color: "#fff",
+            textAlign: "center",
+            textDecoration: "none",
+            fontSize: "18px",
+          }}
+        >
+          作業員別月間まとめ
         </Link>
       </div>
     </main>
