@@ -4,18 +4,29 @@ import { supabase } from "../../lib/supabase";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<any[]>([]);
+  const [message, setMessage] = useState("読み込み中...");
 
   useEffect(() => {
     const fetchReports = async () => {
       const { data, error } = await supabase
         .from("reports")
-        .select("*, workers(name), report_photos(photo_url)")
+        .select(`
+          id,
+          report_date,
+          site,
+          content,
+          hours,
+          workers,
+          worker_id,
+          worker:workers(name)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) {
-        alert(error.message);
+        setMessage("取得エラー: " + error.message);
       } else {
         setReports(data || []);
+        setMessage("");
       }
     };
 
@@ -25,6 +36,8 @@ export default function ReportsPage() {
   return (
     <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
       <h1>日報一覧</h1>
+
+      {message && <p>{message}</p>}
 
       <div style={{ display: "grid", gap: "12px" }}>
         {reports.map((r) => (
@@ -37,35 +50,12 @@ export default function ReportsPage() {
               background: "#fff",
             }}
           >
-            <div>日付: {r.report_date}</div>
-            <div>作業員: {r.workers?.name || "-"}</div>
-            <div>現場: {r.site}</div>
-            <div>内容: {r.content}</div>
-            <div>時間: {r.hours}</div>
-            <div>人数: {r.workers}</div>
-
-            {r.report_photos && r.report_photos.length > 0 && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "8px",
-                  marginTop: "10px",
-                }}
-              >
-                {r.report_photos.map((p: any, index: number) => (
-                  <img
-                    key={index}
-                    src={p.photo_url}
-                    alt={`現場写真 ${index + 1}`}
-                    style={{
-                      width: "100%",
-                      borderRadius: "8px",
-                    }}
-                  />
-                ))}
-              </div>
-            )}
+            <div>日付: {r.report_date || "-"}</div>
+            <div>作業員: {r.worker?.name || "-"}</div>
+            <div>現場: {r.site || "-"}</div>
+            <div>内容: {r.content || "-"}</div>
+            <div>時間: {r.hours || "-"}</div>
+            <div>人数: {r.workers || "-"}</div>
           </div>
         ))}
       </div>
