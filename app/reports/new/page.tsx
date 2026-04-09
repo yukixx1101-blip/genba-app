@@ -14,7 +14,7 @@ export default function NewReportPage() {
 
   const [date, setDate] = useState('')
   const [workerId, setWorkerId] = useState('')
-  const [siteName, setSiteName] = useState('')
+  const [site, setSite] = useState('')
   const [content, setContent] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [workers, setWorkers] = useState<Worker[]>([])
@@ -38,17 +38,27 @@ export default function NewReportPage() {
     setWorkers(data || [])
   }
 
-  const sanitizeFolderName = (name: string) => {
-    return name.trim().replace(/[\\/:*?"<>|]/g, '_')
+  const makeSafeFolderName = (name: string) => {
+    const trimmed = name.trim()
+
+    if (!trimmed) return 'site-unknown'
+
+    return trimmed
+      .normalize('NFKC')
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9_-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^[-_]+|[-_]+$/g, '') || 'site-unknown'
   }
 
   const uploadPhoto = async () => {
     if (!photoFile) return null
 
-    const fileExt = photoFile.name.split('.').pop()
-    const safeSiteName = sanitizeFolderName(siteName || '未分類')
+    const fileExt = photoFile.name.split('.').pop() || 'jpg'
+    const safeSite = makeSafeFolderName(site)
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
-    const filePath = `${safeSiteName}/${fileName}`
+    const filePath = `${safeSite}/${fileName}`
 
     const { error: uploadError } = await supabase.storage
       .from('report-photos')
@@ -72,7 +82,7 @@ export default function NewReportPage() {
         return
       }
 
-      if (!siteName.trim()) {
+      if (!site.trim()) {
         alert('現場名を入力してください')
         return
       }
@@ -92,7 +102,7 @@ export default function NewReportPage() {
 
       const { error } = await supabase.from('reports').insert({
         date,
-        site_name: siteName,
+        site,
         worker_id: workerId || null,
         content,
         photo_url: photoUrl
@@ -133,8 +143,8 @@ export default function NewReportPage() {
       <input
         type="text"
         placeholder="現場名"
-        value={siteName}
-        onChange={(e) => setSiteName(e.target.value)}
+        value={site}
+        onChange={(e) => setSite(e.target.value)}
         style={{
           width: '100%',
           padding: 12,
