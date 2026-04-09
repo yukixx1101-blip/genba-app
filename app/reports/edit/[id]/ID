@@ -1,0 +1,96 @@
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "../../../../lib/supabase";
+import { useRouter } from "next/navigation";
+
+export default function EditPage({ params }: any) {
+  const router = useRouter();
+  const [form, setForm] = useState<any>({
+    report_date: "",
+    site: "",
+    content: "",
+    hours: "",
+    workers: "",
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("id", params.id)
+        .single();
+
+      if (data) setForm(data);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleChange = (e: any) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdate = async () => {
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        report_date: form.report_date,
+        site: form.site,
+        content: form.content,
+        hours: form.hours,
+        workers: form.workers,
+      })
+      .eq("id", params.id);
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("更新しました");
+      router.push("/reports");
+    }
+  };
+
+  return (
+    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
+      <h1>編集</h1>
+
+      <div style={{ display: "grid", gap: "12px" }}>
+        <input
+          type="date"
+          name="report_date"
+          value={form.report_date}
+          onChange={handleChange}
+        />
+
+        <input
+          name="site"
+          value={form.site}
+          onChange={handleChange}
+        />
+
+        <input
+          name="content"
+          value={form.content}
+          onChange={handleChange}
+        />
+
+        <input
+          name="hours"
+          value={form.hours}
+          onChange={handleChange}
+        />
+
+        <input
+          name="workers"
+          value={form.workers}
+          onChange={handleChange}
+        />
+
+        <button onClick={handleUpdate}>
+          更新
+        </button>
+      </div>
+    </main>
+  );
+}
