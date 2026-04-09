@@ -1,45 +1,63 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type Report = {
   id: string
   date: string | null
   site: string | null
+  worker_id: string | null
   content: string | null
   photo_url: string | null
-  workers: { name: string }[] | null
+}
+
+type Worker = {
+  id: string
+  name: string
 }
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
+  const [workers, setWorkers] = useState<Worker[]>([])
 
   useEffect(() => {
-    fetchReports()
+    fetchAll()
   }, [])
 
-  const fetchReports = async () => {
-    const { data, error } = await supabase
+  const fetchAll = async () => {
+    const { data: reportsData, error: reportsError } = await supabase
       .from('reports')
-      .select(`
-        id,
-        date,
-        site,
-        content,
-        photo_url,
-        workers(name)
-      `)
+      .select('id, date, site, worker_id, content, photo_url')
       .order('date', { ascending: false, nullsFirst: false })
 
-    if (error) {
-      alert('取得エラー: ' + error.message)
+    if (reportsError) {
+      alert('日報取得エラー: ' + reportsError.message)
       return
     }
 
-    setReports((data as Report[]) || [])
+    const { data: workersData, error: workersError } = await supabase
+      .from('workers')
+      .select('id, name')
+      .order('name', { ascending: true })
+
+    if (workersError) {
+      alert('作業員取得エラー: ' + workersError.message)
+      return
+    }
+
+    setReports((reportsData as Report[]) || [])
+    setWorkers((workersData as Worker[]) || [])
   }
+
+  const workerMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    workers.forEach((worker) => {
+      map[worker.id] = worker.name
+    })
+    return map
+  }, [workers])
 
   return (
     <div style={{ padding: 16, maxWidth: 700, margin: '0 auto' }}>
@@ -80,7 +98,7 @@ export default function ReportsPage() {
           >
             <p>📅 {item.date || '未入力'}</p>
             <p>🏗 {item.site || '未入力'}</p>
-            <p>👷 {item.workers?.[0]?.name || '未選択'}</p>
+            <p>👷 {item.worker_id ? workerMap[item.worker_id] || '未選択' : '未選択'}</p>
             <p>📝 {item.content || '未入力'}</p>
 
             {item.photo_url && (

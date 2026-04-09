@@ -40,7 +40,6 @@ export default function NewReportPage() {
 
   const makeSafeFolderName = (name: string) => {
     const trimmed = name.trim()
-
     if (!trimmed) return 'site-unknown'
 
     return trimmed
@@ -100,13 +99,15 @@ export default function NewReportPage() {
         photoUrl = await uploadPhoto()
       }
 
-      const { error } = await supabase.from('reports').insert({
+      const insertData = {
         date,
         site,
-        worker_id: workerId || null,
+        worker_id: workerId ? workerId : null,
         content,
         photo_url: photoUrl
-      })
+      }
+
+      const { error } = await supabase.from('reports').insert(insertData)
 
       if (error) {
         throw new Error('日報保存エラー: ' + error.message)
