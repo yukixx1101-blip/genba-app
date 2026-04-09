@@ -31,14 +31,12 @@ export default function SummaryPage() {
     fetchReports();
   }, []);
 
-  const filtered = useMemo(() => {
-    return reports.filter((r) => {
+  const grouped = useMemo(() => {
+    const filtered = reports.filter((r) => {
       if (!r.report_date) return false;
       return String(r.report_date).startsWith(month);
     });
-  }, [reports, month]);
 
-  const grouped = useMemo(() => {
     const map: Record<string, { count: number; totalHours: number; totalPeople: number }> = {};
 
     for (const r of filtered) {
@@ -65,7 +63,7 @@ export default function SummaryPage() {
       totalHours: value.totalHours,
       totalPeople: value.totalPeople,
     }));
-  }, [filtered]);
+  }, [reports, month]);
 
   const handlePdf = () => {
     const doc = new jsPDF();
