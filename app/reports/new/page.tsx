@@ -4,6 +4,7 @@ import { supabase } from "../../../lib/supabase";
 
 export default function NewReportPage() {
   const [form, setForm] = useState({
+    report_date: "",
     site: "",
     content: "",
     hours: "",
@@ -15,15 +16,14 @@ export default function NewReportPage() {
   };
 
   const handleSubmit = async () => {
-    alert("ボタンOK");
-
-    if (!form.site || !form.content) {
-      alert("現場名と作業内容を入れてください");
+    if (!form.report_date || !form.site || !form.content) {
+      alert("日付・現場名・作業内容を入れてください");
       return;
     }
 
     const { error } = await supabase.from("reports").insert([
       {
+        report_date: form.report_date,
         site: form.site,
         content: form.content,
         hours: form.hours,
@@ -36,6 +36,7 @@ export default function NewReportPage() {
     } else {
       alert("保存しました！");
       setForm({
+        report_date: "",
         site: "",
         content: "",
         hours: "",
@@ -45,15 +46,65 @@ export default function NewReportPage() {
   };
 
   return (
-    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
+    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto", fontFamily: "sans-serif" }}>
       <h1>日報入力</h1>
 
-      <input name="site" placeholder="現場名" value={form.site} onChange={handleChange} /><br /><br />
-      <input name="content" placeholder="作業内容" value={form.content} onChange={handleChange} /><br /><br />
-      <input name="hours" placeholder="作業時間" value={form.hours} onChange={handleChange} /><br /><br />
-      <input name="workers" placeholder="人数" value={form.workers} onChange={handleChange} /><br /><br />
+      <div style={{ display: "grid", gap: "12px" }}>
+        <input
+          type="date"
+          name="report_date"
+          value={form.report_date}
+          onChange={handleChange}
+          style={{ padding: "12px", fontSize: "16px" }}
+        />
 
-      <button onClick={handleSubmit}>保存</button>
+        <input
+          name="site"
+          placeholder="現場名"
+          value={form.site}
+          onChange={handleChange}
+          style={{ padding: "12px", fontSize: "16px" }}
+        />
+
+        <input
+          name="content"
+          placeholder="作業内容"
+          value={form.content}
+          onChange={handleChange}
+          style={{ padding: "12px", fontSize: "16px" }}
+        />
+
+        <input
+          name="hours"
+          placeholder="作業時間"
+          value={form.hours}
+          onChange={handleChange}
+          style={{ padding: "12px", fontSize: "16px" }}
+        />
+
+        <input
+          name="workers"
+          placeholder="人数"
+          value={form.workers}
+          onChange={handleChange}
+          style={{ padding: "12px", fontSize: "16px" }}
+        />
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          style={{
+            padding: "14px",
+            fontSize: "18px",
+            background: "#111",
+            color: "#fff",
+            border: "none",
+            borderRadius: "10px",
+          }}
+        >
+          保存する
+        </button>
+      </div>
     </main>
   );
 }
