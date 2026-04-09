@@ -1,9 +1,9 @@
 'use client'
 
-import 'react-calendar/dist/Calendar.css'
-import Calendar from 'react-calendar'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Calendar from 'react-calendar'
+import 'react-calendar/dist/Calendar.css'
 import { supabase } from '@/lib/supabase'
 
 type Schedule = {
@@ -14,11 +14,8 @@ type Schedule = {
   memo: string
 }
 
-type ValuePiece = Date | null
-type Value = ValuePiece | [ValuePiece, ValuePiece]
-
 export default function ScheduleCalendarPage() {
-  const [value, setValue] = useState<Value>(new Date())
+  const [value, setValue] = useState<Date>(new Date())
   const [data, setData] = useState<Schedule[]>([])
 
   useEffect(() => {
@@ -39,11 +36,6 @@ export default function ScheduleCalendarPage() {
     setData(data || [])
   }
 
-  const selectedDate = useMemo(() => {
-    if (Array.isArray(value)) return value[0]
-    return value
-  }, [value])
-
   const formatDate = (date: Date) => {
     const y = date.getFullYear()
     const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -52,10 +44,9 @@ export default function ScheduleCalendarPage() {
   }
 
   const selectedSchedules = useMemo(() => {
-    if (!selectedDate) return []
-    const dateText = formatDate(selectedDate)
+    const dateText = formatDate(value)
     return data.filter((item) => item.date === dateText)
-  }, [selectedDate, data])
+  }, [value, data])
 
   const hasSchedule = (date: Date) => {
     const dateText = formatDate(date)
@@ -94,7 +85,7 @@ export default function ScheduleCalendarPage() {
         }}
       >
         <Calendar
-          onChange={setValue}
+          onChange={(nextValue) => setValue(nextValue as Date)}
           value={value}
           locale="ja-JP"
           tileContent={({ date, view }) =>
@@ -107,7 +98,7 @@ export default function ScheduleCalendarPage() {
                   textAlign: 'center'
                 }}
               >
-                ●予定あり
+                ●
               </div>
             ) : null
           }
@@ -124,7 +115,7 @@ export default function ScheduleCalendarPage() {
         }}
       >
         <h2 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
-          {selectedDate ? `${formatDate(selectedDate)} の予定` : '予定'}
+          {formatDate(value)} の予定
         </h2>
 
         {selectedSchedules.length === 0 ? (
@@ -144,21 +135,20 @@ export default function ScheduleCalendarPage() {
               <p>🔧 {item.work_content}</p>
               <p>📝 {item.memo || 'なし'}</p>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <Link href={`/schedules/${item.id}/edit`}>
-                  <button
-                    style={{
-                      padding: 8,
-                      borderRadius: 6,
-                      border: 'none',
-                      background: '#2563eb',
-                      color: '#fff'
-                    }}
-                  >
-                    編集
-                  </button>
-                </Link>
-              </div>
+              <Link href={`/schedules/${item.id}/edit`}>
+                <button
+                  style={{
+                    marginTop: 10,
+                    padding: 8,
+                    borderRadius: 6,
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#fff'
+                  }}
+                >
+                  編集
+                </button>
+              </Link>
             </div>
           ))
         )}
