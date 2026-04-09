@@ -46,8 +46,15 @@ export default function NewReportPage() {
   };
 
   return (
-    <main style={{ padding: "16px", maxWidth: "480px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1>日報入力</h1>
+    <main
+      style={{
+        padding: "16px",
+        maxWidth: "480px",
+        margin: "0 auto",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <h1 style={{ fontSize: "28px", marginBottom: "16px" }}>日報入力</h1>
 
       <div style={{ display: "grid", gap: "12px" }}>
         <input
@@ -55,7 +62,12 @@ export default function NewReportPage() {
           name="report_date"
           value={form.report_date}
           onChange={handleChange}
-          style={{ padding: "12px", fontSize: "16px" }}
+          style={{
+            padding: "14px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          }}
         />
 
         <input
@@ -63,7 +75,12 @@ export default function NewReportPage() {
           placeholder="現場名"
           value={form.site}
           onChange={handleChange}
-          style={{ padding: "12px", fontSize: "16px" }}
+          style={{
+            padding: "14px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          }}
         />
 
         <input
@@ -71,7 +88,12 @@ export default function NewReportPage() {
           placeholder="作業内容"
           value={form.content}
           onChange={handleChange}
-          style={{ padding: "12px", fontSize: "16px" }}
+          style={{
+            padding: "14px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          }}
         />
 
         <input
@@ -79,7 +101,12 @@ export default function NewReportPage() {
           placeholder="作業時間"
           value={form.hours}
           onChange={handleChange}
-          style={{ padding: "12px", fontSize: "16px" }}
+          style={{
+            padding: "14px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          }}
         />
 
         <input
@@ -87,19 +114,25 @@ export default function NewReportPage() {
           placeholder="人数"
           value={form.workers}
           onChange={handleChange}
-          style={{ padding: "12px", fontSize: "16px" }}
+          style={{
+            padding: "14px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          }}
         />
 
         <button
           type="button"
           onClick={handleSubmit}
           style={{
-            padding: "14px",
+            padding: "16px",
             fontSize: "18px",
-            background: "#111",
-            color: "#fff",
+            borderRadius: "12px",
             border: "none",
-            borderRadius: "10px",
+            backgroundColor: "#111",
+            color: "#fff",
+            fontWeight: "bold",
           }}
         >
           保存する
