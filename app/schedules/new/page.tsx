@@ -1,46 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-
-type Worker = {
-  id: string
-  name: string
-}
 
 export default function NewSchedule() {
   const [date, setDate] = useState('')
   const [site, setSite] = useState('')
   const [content, setContent] = useState('')
   const [memo, setMemo] = useState('')
-  const [workerId, setWorkerId] = useState('')
-  const [workers, setWorkers] = useState<Worker[]>([])
-
-  useEffect(() => {
-    fetchWorkers()
-  }, [])
-
-  const fetchWorkers = async () => {
-    const { data, error } = await supabase
-      .from('workers')
-      .select('id, name')
-      .order('name', { ascending: true })
-
-    if (error) {
-      alert('作業員の取得エラー: ' + error.message)
-      return
-    }
-
-    setWorkers(data || [])
-  }
 
   const handleSubmit = async () => {
     const { error } = await supabase.from('schedules').insert({
       date,
       site_name: site,
       work_content: content,
-      memo,
-      worker_id: workerId || null
+      memo
     })
 
     if (error) {
@@ -53,7 +27,6 @@ export default function NewSchedule() {
     setSite('')
     setContent('')
     setMemo('')
-    setWorkerId('')
   }
 
   return (
@@ -100,25 +73,6 @@ export default function NewSchedule() {
           boxSizing: 'border-box'
         }}
       />
-
-      <select
-        value={workerId}
-        onChange={(e) => setWorkerId(e.target.value)}
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      >
-        <option value="">作業員を選択</option>
-        {workers.map((worker) => (
-          <option key={worker.id} value={worker.id}>
-            {worker.name}
-          </option>
-        ))}
-      </select>
 
       <textarea
         placeholder="メモ"

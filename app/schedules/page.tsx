@@ -10,10 +10,6 @@ type Schedule = {
   site_name: string
   work_content: string
   memo: string
-  worker_id: string | null
-  workers?: {
-    name: string
-  } | null
 }
 
 export default function ScheduleList() {
@@ -26,15 +22,7 @@ export default function ScheduleList() {
   const fetchData = async () => {
     const { data, error } = await supabase
       .from('schedules')
-      .select(`
-        id,
-        date,
-        site_name,
-        work_content,
-        memo,
-        worker_id,
-        workers(name)
-      `)
+      .select('id, date, site_name, work_content, memo')
       .order('date', { ascending: true })
 
     if (error) {
@@ -42,7 +30,7 @@ export default function ScheduleList() {
       return
     }
 
-    setData((data as Schedule[]) || [])
+    setData(data || [])
   }
 
   return (
@@ -85,7 +73,6 @@ export default function ScheduleList() {
             <p>📅 {item.date}</p>
             <p>🏗 {item.site_name}</p>
             <p>🔧 {item.work_content}</p>
-            <p>👷 {item.workers?.name || '未選択'}</p>
             <p>📝 {item.memo || 'なし'}</p>
           </div>
         ))
