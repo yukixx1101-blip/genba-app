@@ -10,8 +10,6 @@ export default function Home() {
   useEffect(() => {
     const channel = supabase
       .channel('realtime-home-notify')
-
-      // 日報
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reports' },
@@ -27,8 +25,6 @@ export default function Home() {
           }
         }
       )
-
-      // スケジュール
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'schedules' },
@@ -44,7 +40,6 @@ export default function Home() {
           }
         }
       )
-
       .subscribe()
 
     return () => {
@@ -70,7 +65,6 @@ export default function Home() {
         現場管理アプリ
       </h1>
 
-      {/* 🔔 通知 */}
       {message && (
         <div
           style={{
