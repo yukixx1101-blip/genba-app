@@ -17,6 +17,9 @@ export default function NewReportPage() {
   const [site, setSite] = useState('')
   const [content, setContent] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [workHours, setWorkHours] = useState('8.0')
+  const [overtimeHours, setOvertimeHours] = useState('0.0')
+  const [isHolidayWork, setIsHolidayWork] = useState(false)
   const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -42,13 +45,15 @@ export default function NewReportPage() {
     const trimmed = name.trim()
     if (!trimmed) return 'site-unknown'
 
-    return trimmed
-      .normalize('NFKC')
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9_-]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^[-_]+|[-_]+$/g, '') || 'site-unknown'
+    return (
+      trimmed
+        .normalize('NFKC')
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9_-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^[-_]+|[-_]+$/g, '') || 'site-unknown'
+    )
   }
 
   const uploadPhoto = async () => {
@@ -91,6 +96,19 @@ export default function NewReportPage() {
         return
       }
 
+      const parsedWorkHours = Number(workHours || 0)
+      const parsedOvertimeHours = Number(overtimeHours || 0)
+
+      if (Number.isNaN(parsedWorkHours) || parsedWorkHours < 0) {
+        alert('作業時間を正しく入力してください')
+        return
+      }
+
+      if (Number.isNaN(parsedOvertimeHours) || parsedOvertimeHours < 0) {
+        alert('残業時間を正しく入力してください')
+        return
+      }
+
       setLoading(true)
 
       let photoUrl: string | null = null
@@ -102,9 +120,12 @@ export default function NewReportPage() {
       const insertData = {
         date,
         site,
-        worker_id: workerId ? workerId : null,
+        worker_id: workerId || null,
         content,
-        photo_url: photoUrl
+        photo_url: photoUrl,
+        work_hours: parsedWorkHours,
+        overtime_hours: parsedOvertimeHours,
+        is_holiday_work: isHolidayWork
       }
 
       const { error } = await supabase.from('reports').insert(insertData)
@@ -123,97 +144,171 @@ export default function NewReportPage() {
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-        日報登録
-      </h1>
+    <div style={{ minHeight: '100vh', background: '#000000', padding: 12 }}>
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <div
+          style={{
+            background: '#464646',
+            borderRadius: 20,
+            padding: 16,
+            color: '#ffffff',
+            marginBottom: 12
+          }}
+        >
+          <div style={{ fontSize: 22, fontWeight: 700 }}>日報登録</div>
+          <div style={{ fontSize: 12, color: '#d1d5db', marginTop: 4 }}>
+            New Report
+          </div>
+        </div>
 
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 20,
+            padding: 12
+          }}
+        >
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={inputStyle}
+          />
 
-      <input
-        type="text"
-        placeholder="現場名"
-        value={site}
-        onChange={(e) => setSite(e.target.value)}
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+          <input
+            type="text"
+            placeholder="現場名"
+            value={site}
+            onChange={(e) => setSite(e.target.value)}
+            style={inputStyle}
+          />
 
-      <select
-        value={workerId}
-        onChange={(e) => setWorkerId(e.target.value)}
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      >
-        <option value="">作業員を選択</option>
-        {workers.map((worker) => (
-          <option key={worker.id} value={worker.id}>
-            {worker.name}
-          </option>
-        ))}
-      </select>
+          <select
+            value={workerId}
+            onChange={(e) => setWorkerId(e.target.value)}
+            style={inputStyle}
+          >
+            <option value="">作業員を選択</option>
+            {workers.map((worker) => (
+              <option key={worker.id} value={worker.id}>
+                {worker.name}
+              </option>
+            ))}
+          </select>
 
-      <textarea
-        placeholder="作業内容"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        style={{
-          width: '100%',
-          minHeight: 120,
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 10,
+              marginBottom: 12
+            }}
+          >
+            <div>
+              <div style={labelStyle}>作業時間 / Work Hours</div>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={workHours}
+                onChange={(e) => setWorkHours(e.target.value)}
+                style={{ ...inputStyle, marginBottom: 0 }}
+              />
+            </div>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-        style={{
-          width: '100%',
-          marginBottom: 16
-        }}
-      />
+            <div>
+              <div style={labelStyle}>残業時間 / Overtime</div>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={overtimeHours}
+                onChange={(e) => setOvertimeHours(e.target.value)}
+                style={{ ...inputStyle, marginBottom: 0 }}
+              />
+            </div>
+          </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        style={{
-          width: '100%',
-          padding: 12,
-          borderRadius: 8,
-          border: 'none',
-          background: '#2563eb',
-          color: '#fff',
-          fontSize: 16,
-          opacity: loading ? 0.7 : 1
-        }}
-      >
-        {loading ? '保存中...' : '保存'}
-      </button>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: '#1f1f1f',
+              color: '#ffffff',
+              padding: 12,
+              borderRadius: 12,
+              marginBottom: 12,
+              fontSize: 14
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isHolidayWork}
+              onChange={(e) => setIsHolidayWork(e.target.checked)}
+            />
+            休日出勤 / Holiday Work
+          </label>
+
+          <textarea
+            placeholder="作業内容"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            style={{
+              ...inputStyle,
+              minHeight: 120,
+              resize: 'vertical'
+            }}
+          />
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+            style={{
+              width: '100%',
+              marginBottom: 16,
+              color: '#ffffff'
+            }}
+          />
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: 12,
+              borderRadius: 12,
+              border: 'none',
+              background: '#1f1f1f',
+              color: '#fff',
+              fontSize: 16,
+              fontWeight: 700,
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? '保存中...' : '保存'}
+          </button>
+        </div>
+      </div>
     </div>
   )
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: 12,
+  marginBottom: 12,
+  fontSize: 16,
+  boxSizing: 'border-box',
+  borderRadius: 12,
+  border: 'none',
+  background: '#1f1f1f',
+  color: '#ffffff'
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: '#ffffff',
+  marginBottom: 6
 }
