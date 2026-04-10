@@ -11,23 +11,13 @@ export default function RootLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1,
-    textAlign: "center",
-    padding: "10px 6px",
-    textDecoration: "none",
-    color: active ? "#111" : "#666",
-    fontWeight: active ? "bold" : "normal",
-    fontSize: "14px",
-  });
-
   return (
     <html lang="ja">
       <body
         style={{
           margin: 0,
           fontFamily: "sans-serif",
-          backgroundColor: "#f7f7f7",
+          backgroundColor: "#000",
         }}
       >
         {/* 上ナビ */}
@@ -46,90 +36,46 @@ export default function RootLayout({
           <button
             type="button"
             onClick={() => router.back()}
-            style={{
-              padding: "10px 12px",
-              borderRadius: "10px",
-              border: "none",
-              backgroundColor: "#333",
-              color: "#fff",
-              fontSize: "14px",
-            }}
+            style={navBtn}
           >
-            ← 戻る
+            ←
           </button>
 
           <button
             type="button"
             onClick={() => router.forward()}
-            style={{
-              padding: "10px 12px",
-              borderRadius: "10px",
-              border: "none",
-              backgroundColor: "#333",
-              color: "#fff",
-              fontSize: "14px",
-            }}
+            style={navBtn}
           >
-            進む →
+            →
           </button>
 
-          <Link
-            href="/"
-            style={{
-              padding: "10px 12px",
-              borderRadius: "10px",
-              backgroundColor: "#fff",
-              color: "#111",
-              textDecoration: "none",
-              fontSize: "14px",
-              fontWeight: "bold",
-            }}
-          >
+          <Link href="/" style={homeBtn}>
             ホーム
           </Link>
         </div>
 
         {/* 本体 */}
-        <div style={{ paddingBottom: "80px" }}>{children}</div>
-
-        {/* 下タブ */}
-        <div
-          style={{
-            position: "fixed",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: "flex",
-            backgroundColor: "#fff",
-            borderTop: "1px solid #ddd",
-            zIndex: 1000,
-          }}
-        >
-          <Link href="/" style={tabStyle(pathname === "/")}>
-            🏠
-            <br />
-            ホーム
-          </Link>
-
-          <Link
-            href="/reports/new"
-            style={tabStyle(pathname === "/reports/new")}
-          >
-            ✍️
-            <br />
-            入力
-          </Link>
-
-          <Link
-            href="/reports"
-            style={tabStyle(pathname === "/reports")}
-          >
-            📋
-            <br />
-            一覧
-          </Link>
-        </div>
+        <div>{children}</div>
       </body>
     </html>
   );
 }
+
+const navBtn: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: "10px",
+  border: "none",
+  backgroundColor: "#333",
+  color: "#fff",
+  fontSize: "14px",
+};
+
+const homeBtn: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: "10px",
+  backgroundColor: "#fff",
+  color: "#111",
+  textDecoration: "none",
+  fontSize: "14px",
+  fontWeight: "bold",
+};
