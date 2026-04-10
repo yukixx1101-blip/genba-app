@@ -1,9 +1,27 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import Calendar from 'react-calendar'
+import 'react-calendar/dist/Calendar.css'
 import { supabase } from '@/lib/supabase'
-import { User, Calendar, MapPin, FileText } from 'lucide-react'
+import {
+  CalendarDays,
+  ClipboardList,
+  FileText,
+  MapPin,
+  User,
+  Pencil,
+  Trash2
+} from 'lucide-react'
+
+type Schedule = {
+  id: string
+  date: string
+  site_name: string
+  work_content: string
+  memo: string
+}
 
 type Report = {
   id: string
@@ -19,207 +37,454 @@ type Worker = {
   name: string
 }
 
-export default function ReportsPage() {
+export default function ScheduleCalendarPage() {
+  const [value, setValue] = useState<Date>(new Date())
+  const [schedules, setSchedules] = useState<Schedule[]>([])
   const [reports, setReports] = useState<Report[]>([])
   const [workers, setWorkers] = useState<Worker[]>([])
-  const [selectedWorker, setSelectedWorker] = useState<string>('all')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchAll()
   }, [])
 
   const fetchAll = async () => {
-    const { data: reportsData } = await supabase
-      .from('reports')
-      .select('*')
-      .order('date', { ascending: false })
+    setLoading(true)
 
-    const { data: workersData } = await supabase
-      .from('workers')
-      .select('*')
-      .order('name')
+    const [
+      { data: schedulesData, error: schedulesError },
+      { data: reportsData, error: reportsError },
+      { data: workersData, error: workersError }
+    ] = await Promise.all([
+      supabase
+        .from('schedules')
+        .select('id, date, site_name, work_content, memo')
+        .order('date', { ascending: true }),
+      supabase
+        .from('reports')
+        .select('id, date, site, worker_id, content, photo_url')
+        .order('date', { ascending: true }),
+      supabase
+        .from('workers')
+        .select('id, name')
+        .order('name', { ascending: true })
+    ])
 
-    setReports(reportsData || [])
-    setWorkers(workersData || [])
+    if (schedulesError) {
+      alert('予定取得エラー: ' + schedulesError.message)
+      setLoading(false)
+      return
+    }
+
+    if (reportsError) {
+      alert('日報取得エラー: ' + reportsError.message)
+      setLoading(false)
+      return
+    }
+
+    if (workersError) {
+      alert('作業員取得エラー: ' + workersError.message)
+      setLoading(false)
+      return
+    }
+
+    setSchedules((schedulesData as Schedule[]) || [])
+    setReports((reportsData as Report[]) || [])
+    setWorkers((workersData as Worker[]) || [])
+    setLoading(false)
   }
 
   const workerMap = useMemo(() => {
     const map: Record<string, string> = {}
-    workers.forEach((w) => (map[w.id] = w.name))
+    workers.forEach((worker) => {
+      map[worker.id] = worker.name
+    })
     return map
   }, [workers])
 
-  const filteredReports = useMemo(() => {
-    if (selectedWorker === 'all') return reports
-    return reports.filter((r) => r.worker_id === selectedWorker)
-  }, [reports, selectedWorker])
+  const formatDate = (date: Date) => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const normalizeDbDate = (dateText: string | null) => {
+    if (!dateText) return ''
+    return String(dateText).slice(0, 10)
+  }
+
+  const selectedDateText = formatDate(value)
+
+  const selectedSchedules = useMemo(() => {
+    return schedules.filter((item) => normalizeDbDate(item.date) === selectedDateText)
+  }, [schedules, selectedDateText])
+
+  const selectedReports = useMemo(() => {
+    return reports.filter((item) => normalizeDbDate(item.date) === selectedDateText)
+  }, [reports, selectedDateText])
+
+  const hasSchedule = (date: Date) => {
+    const calendarDateText = formatDate(date)
+    return schedules.some((item) => normalizeDbDate(item.date) === calendarDateText)
+  }
+
+  const hasReport = (date: Date) => {
+    const calendarDateText = formatDate(date)
+    return reports.some((item) => normalizeDbDate(item.date) === calendarDateText)
+  }
+
+  const handleDeleteSchedule = async (id: string) => {
+    const ok = confirm('この予定を削除しますか？')
+    if (!ok) return
+
+    const { error } = await supabase.from('schedules').delete().eq('id', id)
+
+    if (error) {
+      alert('削除エラー: ' + error.message)
+      return
+    }
+
+    fetchAll()
+  }
+
+  const tileContent = ({ date, view }: { date: Date; view: string }) => {
+    if (view !== 'month') return null
+
+    const scheduleExists = hasSchedule(date)
+    const reportExists = hasReport(date)
+
+    if (!scheduleExists && !reportExists) return null
+
+    return (
+      <div
+        style={{
+          marginTop: 3,
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 4
+        }}
+      >
+        {scheduleExists && (
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: '#ffffff',
+              display: 'inline-block'
+            }}
+          />
+        )}
+        {reportExists && (
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: '#d1d5db',
+              display: 'inline-block'
+            }}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
-    <div style={{ background: '#000', minHeight: '100vh', padding: 12 }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#000000',
+        padding: 12
+      }}
+    >
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-
-        {/* タイトル */}
         <div
           style={{
             background: '#464646',
-            padding: 16,
             borderRadius: 20,
-            marginBottom: 12,
-            color: '#fff'
-          }}
-        >
-          <div style={{ fontSize: 20, fontWeight: 700 }}>
-            日報一覧
-          </div>
-          <div style={{ fontSize: 12, color: '#d1d5db' }}>
-            Reports
-          </div>
-        </div>
-
-        {/* 新規ボタン */}
-        <Link href="/reports/new">
-          <button
-            style={{
-              width: '100%',
-              padding: 12,
-              marginBottom: 12,
-              borderRadius: 14,
-              border: 'none',
-              background: '#1f1f1f',
-              color: '#fff',
-              fontWeight: 700
-            }}
-          >
-            日報登録
-          </button>
-        </Link>
-
-        {/* 作業員フィルター */}
-        <div
-          style={{
-            background: '#808080',
-            borderRadius: 16,
-            padding: 8,
-            display: 'flex',
-            overflowX: 'auto',
-            gap: 6,
+            padding: 16,
+            color: '#ffffff',
             marginBottom: 12
           }}
         >
-          <button
-            onClick={() => setSelectedWorker('all')}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 12,
-              border: 'none',
-              background: selectedWorker === 'all' ? '#1f1f1f' : '#bfbfbf',
-              color: '#fff',
-              fontSize: 12
-            }}
-          >
-            全体
-          </button>
-
-          {workers.map((w) => (
-            <button
-              key={w.id}
-              onClick={() => setSelectedWorker(w.id)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 12,
-                border: 'none',
-                background:
-                  selectedWorker === w.id ? '#1f1f1f' : '#bfbfbf',
-                color: '#fff',
-                fontSize: 12,
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {w.name}
-            </button>
-          ))}
+          <div style={{ fontSize: 24, fontWeight: 700 }}>カレンダー</div>
+          <div style={{ fontSize: 12, color: '#d1d5db', marginTop: 4 }}>
+            Schedule & Reports
+          </div>
         </div>
 
-        {/* リスト */}
-        {filteredReports.length === 0 ? (
-          <div style={{ color: '#aaa', textAlign: 'center' }}>
-            データなし
-          </div>
-        ) : (
-          filteredReports.map((item) => (
-            <div
-              key={item.id}
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 20,
+            padding: 12,
+            marginBottom: 12,
+            display: 'flex',
+            gap: 8
+          }}
+        >
+          <Link href="/schedules" style={{ flex: 1, textDecoration: 'none' }}>
+            <button
               style={{
+                width: '100%',
+                padding: 10,
+                borderRadius: 12,
+                border: 'none',
                 background: '#1f1f1f',
-                borderRadius: 16,
-                padding: 12,
-                marginBottom: 10,
-                color: '#fff'
+                color: '#ffffff',
+                fontWeight: 700
               }}
             >
-              <div style={{ fontSize: 13, color: '#d1d5db', marginBottom: 6 }}>
-                <Calendar size={14} /> {item.date || '-'}
-              </div>
+              一覧へ戻る
+            </button>
+          </Link>
 
-              <div style={{ fontSize: 13, marginBottom: 4 }}>
-                <MapPin size={14} /> {item.site || '-'}
-              </div>
+          <Link href="/schedules/new" style={{ flex: 1, textDecoration: 'none' }}>
+            <button
+              style={{
+                width: '100%',
+                padding: 10,
+                borderRadius: 12,
+                border: 'none',
+                background: '#1f1f1f',
+                color: '#ffffff',
+                fontWeight: 700
+              }}
+            >
+              新規登録
+            </button>
+          </Link>
+        </div>
 
-              <div style={{ fontSize: 13, marginBottom: 4 }}>
-                <User size={14} />{' '}
-                {item.worker_id ? workerMap[item.worker_id] : '-'}
-              </div>
+        <div
+          style={{
+            background: '#808080',
+            padding: 12,
+            borderRadius: 20,
+            marginBottom: 12
+          }}
+        >
+          <div
+            style={{
+              background: '#1f1f1f',
+              borderRadius: 16,
+              padding: 10
+            }}
+          >
+            <Calendar
+              onChange={(nextValue) => setValue(nextValue as Date)}
+              value={value}
+              locale="ja-JP"
+              tileContent={tileContent}
+            />
+          </div>
 
-              <div style={{ fontSize: 14, marginTop: 6 }}>
-                <FileText size={14} /> {item.content || '-'}
-              </div>
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 12,
+              color: '#ffffff',
+              display: 'flex',
+              gap: 12,
+              flexWrap: 'wrap'
+            }}
+          >
+            <span>● 白: 予定あり</span>
+            <span>● 薄グレー: 日報あり</span>
+          </div>
+        </div>
 
-              {item.photo_url && (
-                <img
-                  src={item.photo_url}
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 20,
+            padding: 12
+          }}
+        >
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#ffffff', marginBottom: 10 }}>
+            {selectedDateText}
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div
+              style={{
+                fontSize: 13,
+                color: '#d1d5db',
+                marginBottom: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <CalendarDays size={15} />
+              予定
+            </div>
+
+            {selectedSchedules.length === 0 ? (
+              <div
+                style={{
+                  background: '#1f1f1f',
+                  color: '#d1d5db',
+                  borderRadius: 16,
+                  padding: 12
+                }}
+              >
+                予定はありません
+              </div>
+            ) : (
+              selectedSchedules.map((item) => (
+                <div
+                  key={item.id}
                   style={{
-                    width: '100%',
-                    borderRadius: 10,
-                    marginTop: 8
-                  }}
-                />
-              )}
-
-              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <Link href={`/reports/${item.id}/edit`} style={{ flex: 1 }}>
-                  <button
-                    style={{
-                      width: '100%',
-                      padding: 8,
-                      borderRadius: 10,
-                      border: 'none',
-                      background: '#808080',
-                      color: '#000'
-                    }}
-                  >
-                    編集
-                  </button>
-                </Link>
-
-                <button
-                  onClick={async () => {
-                    await supabase.from('reports').delete().eq('id', item.id)
-                    fetchAll()
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: 8,
-                    borderRadius: 10,
-                    border: 'none',
-                    background: '#464646',
-                    color: '#fff'
+                    background: '#1f1f1f',
+                    borderRadius: 16,
+                    padding: 12,
+                    marginBottom: 8,
+                    color: '#ffffff'
                   }}
                 >
-                  削除
-                </button>
-              </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <MapPin size={14} />
+                    <span>{item.site_name}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <ClipboardList size={14} />
+                    <span>{item.work_content}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#d1d5db' }}>
+                    {item.memo || 'メモなし'}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                    <Link href={`/schedules/${item.id}/edit`} style={{ flex: 1, textDecoration: 'none' }}>
+                      <button
+                        style={{
+                          width: '100%',
+                          padding: 9,
+                          borderRadius: 10,
+                          border: 'none',
+                          background: '#808080',
+                          color: '#000000',
+                          fontWeight: 700
+                        }}
+                      >
+                        編集
+                      </button>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDeleteSchedule(item.id)}
+                      style={{
+                        flex: 1,
+                        padding: 9,
+                        borderRadius: 10,
+                        border: 'none',
+                        background: '#464646',
+                        color: '#ffffff',
+                        fontWeight: 700
+                      }}
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 13,
+                color: '#d1d5db',
+                marginBottom: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <FileText size={15} />
+              日報
             </div>
-          ))
+
+            {selectedReports.length === 0 ? (
+              <div
+                style={{
+                  background: '#1f1f1f',
+                  color: '#d1d5db',
+                  borderRadius: 16,
+                  padding: 12
+                }}
+              >
+                日報はありません
+              </div>
+            ) : (
+              selectedReports.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: '#1f1f1f',
+                    borderRadius: 16,
+                    padding: 12,
+                    marginBottom: 8,
+                    color: '#ffffff'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <MapPin size={14} />
+                    <span>{item.site || '現場未入力'}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <User size={14} />
+                    <span>
+                      {item.worker_id ? workerMap[item.worker_id] || '未選択' : '未選択'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 14, lineHeight: 1.6 }}>{item.content || '内容なし'}</div>
+
+                  {item.photo_url && (
+                    <img
+                      src={item.photo_url}
+                      alt="日報写真"
+                      style={{
+                        width: '100%',
+                        marginTop: 10,
+                        borderRadius: 12
+                      }}
+                    />
+                  )}
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                    <Link href={`/reports/${item.id}/edit`} style={{ flex: 1, textDecoration: 'none' }}>
+                      <button
+                        style={{
+                          width: '100%',
+                          padding: 9,
+                          borderRadius: 10,
+                          border: 'none',
+                          background: '#808080',
+                          color: '#000000',
+                          fontWeight: 700
+                        }}
+                      >
+                        編集
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {loading && (
+          <div style={{ color: '#d1d5db', textAlign: 'center', marginTop: 12 }}>
+            読み込み中...
+          </div>
         )}
       </div>
     </div>
