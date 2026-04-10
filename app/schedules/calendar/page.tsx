@@ -10,9 +10,7 @@ import {
   ClipboardList,
   FileText,
   MapPin,
-  User,
-  Pencil,
-  Trash2
+  User
 } from 'lucide-react'
 
 type Schedule = {
