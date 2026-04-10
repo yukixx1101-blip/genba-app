@@ -23,33 +23,17 @@ export default function Home() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reports' },
-        (payload) => {
+        () => {
           setHasNotification(true)
-          if (payload.eventType === 'INSERT') {
-            setMessage('日報が追加されました')
-          }
-          if (payload.eventType === 'UPDATE') {
-            setMessage('日報が更新されました')
-          }
-          if (payload.eventType === 'DELETE') {
-            setMessage('日報が削除されました')
-          }
+          setMessage('日報が更新されました')
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'schedules' },
-        (payload) => {
+        () => {
           setHasNotification(true)
-          if (payload.eventType === 'INSERT') {
-            setMessage('スケジュールが追加されました')
-          }
-          if (payload.eventType === 'UPDATE') {
-            setMessage('スケジュールが更新されました')
-          }
-          if (payload.eventType === 'DELETE') {
-            setMessage('スケジュールが削除されました')
-          }
+          setMessage('スケジュールが更新されました')
         }
       )
       .subscribe()
@@ -61,9 +45,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!message) return
-    const timer = setTimeout(() => {
-      setMessage('')
-    }, 2500)
+    const timer = setTimeout(() => setMessage(''), 2500)
     return () => clearTimeout(timer)
   }, [message])
 
@@ -89,15 +71,15 @@ export default function Home() {
       style={{
         minHeight: '100vh',
         background: '#000000',
-        padding: '12px'
+        padding: 12
       }}
     >
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         
-        {/* header */}
+        {/* ヘッダー */}
         <div
           style={{
-            background: '#1f1f1f',
+            background: '#1a1a1a',
             borderRadius: 20,
             padding: 16,
             color: '#fff',
@@ -105,7 +87,7 @@ export default function Home() {
             position: 'relative'
           }}
         >
-          {/* 通知バッジ */}
+          {/* 通知 */}
           <div style={{ position: 'absolute', top: 14, right: 14 }}>
             <Bell size={20} />
             {hasNotification && (
@@ -127,23 +109,11 @@ export default function Home() {
             株式会社 玄
           </div>
 
-          <div
-            style={{
-              fontSize: 13,
-              color: '#aaa',
-              marginTop: 4
-            }}
-          >
+          <div style={{ fontSize: 13, color: '#bbb', marginTop: 4 }}>
             今日もお疲れ様です。
           </div>
 
-          <div
-            style={{
-              marginTop: 10,
-              fontSize: 13,
-              color: '#ccc'
-            }}
-          >
+          <div style={{ marginTop: 10, fontSize: 13, color: '#ccc' }}>
             {today}
           </div>
         </div>
@@ -152,7 +122,7 @@ export default function Home() {
         {message && (
           <div
             style={{
-              background: '#1f1f1f',
+              background: '#1a1a1a',
               color: '#fff',
               padding: 10,
               borderRadius: 14,
@@ -167,7 +137,7 @@ export default function Home() {
         {/* メニュー */}
         <div
           style={{
-            background: '#111111',
+            background: '#121212',
             borderRadius: 20,
             padding: 12
           }}
@@ -196,23 +166,24 @@ export default function Home() {
                 <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
                   <div
                     style={{
-                      background: '#1f1f1f',
+                      background: '#808080',
                       borderRadius: 16,
                       padding: 12,
                       minHeight: 90,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'space-between'
+                      justifyContent: 'space-between',
+                      transition: '0.15s'
                     }}
                   >
-                    <Icon size={18} color="#fff" />
+                    <Icon size={18} color="#000" />
 
                     <div>
                       <div
                         style={{
                           fontSize: 15,
                           fontWeight: 700,
-                          color: '#fff'
+                          color: '#000'
                         }}
                       >
                         {item.ja}
@@ -220,7 +191,7 @@ export default function Home() {
                       <div
                         style={{
                           fontSize: 11,
-                          color: '#888'
+                          color: '#1f1f1f'
                         }}
                       >
                         {item.en}
