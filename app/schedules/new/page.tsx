@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -12,6 +12,17 @@ export default function NewSchedulePage() {
   const [workContent, setWorkContent] = useState('')
   const [memo, setMemo] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const initialDate = params.get('date')
+
+    if (initialDate) {
+      setDate(initialDate)
+    }
+  }, [])
 
   const handleSubmit = async () => {
     if (!date) {
