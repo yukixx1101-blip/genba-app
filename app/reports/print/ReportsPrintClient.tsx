@@ -11,6 +11,9 @@ type Report = {
   worker_id: string | null
   content: string | null
   photo_url: string | null
+  work_hours: number | null
+  overtime_hours: number | null
+  is_holiday_work: boolean | null
 }
 
 type Worker = {
@@ -59,7 +62,9 @@ export default function ReportsPrintClient({
 
     let query = supabase
       .from('reports')
-      .select('id, date, site, worker_id, content, photo_url')
+      .select(
+        'id, date, site, worker_id, content, photo_url, work_hours, overtime_hours, is_holiday_work'
+      )
       .order('date', { ascending: false, nullsFirst: false })
 
     if (workerId !== 'all') {
@@ -193,7 +198,7 @@ export default function ReportsPrintClient({
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '120px 1fr',
+                  gridTemplateColumns: '140px 1fr',
                   gap: 8,
                   marginBottom: 8,
                   fontSize: 14
@@ -209,6 +214,15 @@ export default function ReportsPrintClient({
                 <div>
                   {item.worker_id ? workerMap[item.worker_id] || '未選択' : '未選択'}
                 </div>
+
+                <div style={{ color: '#666666' }}>作業時間</div>
+                <div>{Number(item.work_hours ?? 0).toFixed(1)}h</div>
+
+                <div style={{ color: '#666666' }}>残業時間</div>
+                <div>{Number(item.overtime_hours ?? 0).toFixed(1)}h</div>
+
+                <div style={{ color: '#666666' }}>休日出勤</div>
+                <div>{item.is_holiday_work ? 'あり' : 'なし'}</div>
               </div>
 
               <div style={{ marginTop: 12 }}>

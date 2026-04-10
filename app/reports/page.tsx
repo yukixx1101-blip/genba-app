@@ -31,18 +31,43 @@ export default function ReportsPage() {
   }, [])
 
   const fetchAll = async () => {
-    const { data: reportsData } = await supabase
+    const { data: reportsData, error: reportsError } = await supabase
       .from('reports')
       .select('*')
       .order('date', { ascending: false })
 
-    const { data: workersData } = await supabase
+    if (reportsError) {
+      alert('日報取得エラー: ' + reportsError.message)
+      return
+    }
+
+    const { data: workersData, error: workersError } = await supabase
       .from('workers')
       .select('*')
       .order('name', { ascending: true })
 
+    if (workersError) {
+      alert('作業員取得エラー: ' + workersError.message)
+      return
+    }
+
     setReports(reportsData || [])
     setWorkers(workersData || [])
+  }
+
+  const handleDelete = async (id: string) => {
+    const ok = confirm('この日報を削除しますか？')
+    if (!ok) return
+
+    const { error } = await supabase.from('reports').delete().eq('id', id)
+
+    if (error) {
+      alert('削除エラー: ' + error.message)
+      return
+    }
+
+    alert('削除しました')
+    fetchAll()
   }
 
   const workerMap = useMemo(() => {
@@ -206,6 +231,42 @@ export default function ReportsPage() {
                   }}
                 />
               )}
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Link
+                  href={`/reports/${r.id}/edit`}
+                  style={{ flex: 1, textDecoration: 'none' }}
+                >
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: 10,
+                      borderRadius: 10,
+                      border: 'none',
+                      background: '#808080',
+                      color: '#000',
+                      fontWeight: 700
+                    }}
+                  >
+                    編集
+                  </button>
+                </Link>
+
+                <button
+                  onClick={() => handleDelete(r.id)}
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    borderRadius: 10,
+                    border: 'none',
+                    background: '#464646',
+                    color: '#fff',
+                    fontWeight: 700
+                  }}
+                >
+                  削除
+                </button>
+              </div>
             </div>
           ))
         )}
@@ -214,7 +275,7 @@ export default function ReportsPage() {
   )
 }
 
-const btn: React.CSSProperties = {
+const btn = {
   width: '100%',
   padding: 10,
   borderRadius: 10,
@@ -224,28 +285,28 @@ const btn: React.CSSProperties = {
   fontWeight: 700
 }
 
-const tab: React.CSSProperties = {
+const tab = {
   padding: '6px 10px',
   borderRadius: 10,
   border: 'none',
   background: '#1f1f1f',
   color: '#fff',
-  whiteSpace: 'nowrap'
+  whiteSpace: 'nowrap' as const
 }
 
-const infoBox: React.CSSProperties = {
+const infoBox = {
   background: '#2a2a2a',
   borderRadius: 10,
   padding: 10
 }
 
-const infoLabel: React.CSSProperties = {
+const infoLabel = {
   fontSize: 11,
   color: '#d1d5db',
   marginBottom: 4
 }
 
-const infoValue: React.CSSProperties = {
+const infoValue = {
   fontSize: 16,
   color: '#ffffff',
   fontWeight: 700
