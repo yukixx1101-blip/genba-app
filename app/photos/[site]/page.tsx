@@ -1,31 +1,40 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-type Report = {
+type Photo = {
   id: string
   photo_url: string | null
+  shot_date: string | null
+  worker_id: string | null
+}
+
+type Worker = {
+  id: string
+  name: string
 }
 
 export default function SitePhotosPage() {
   const params = useParams()
   const site = decodeURIComponent(params.site as string)
 
-  const [data, setData] = useState<Report[]>([])
+  const [data, setData] = useState<Photo[]>([])
+  const [workers, setWorkers] = useState<Worker[]>([])
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
+    fetchWorkers()
   }, [site])
 
   const fetchData = async () => {
     const { data, error } = await supabase
-      .from('reports')
-      .select('id, photo_url')
+      .from('photos')
+      .select('id, photo_url, shot_date, worker_id')
       .eq('site', site)
-      .not('photo_url', 'is', null)
+      .order('shot_date', { ascending: false })
 
     if (error) {
       alert('取得エラー: ' + error.message)
@@ -35,14 +44,33 @@ export default function SitePhotosPage() {
     setData(data || [])
   }
 
+  const fetchWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('id, name')
+      .order('name', { ascending: true })
+
+    if (error) {
+      alert('作業員取得エラー: ' + error.message)
+      return
+    }
+
+    setWorkers(data || [])
+  }
+
+  const workerMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    workers.forEach((worker) => {
+      map[worker.id] = worker.name
+    })
+    return map
+  }, [workers])
+
   const handleDelete = async (id: string) => {
     const ok = confirm('この写真を削除しますか？')
     if (!ok) return
 
-    const { error } = await supabase
-      .from('reports')
-      .update({ photo_url: null })
-      .eq('id', id)
+    const { error } = await supabase.from('photos').delete().eq('id', id)
 
     if (error) {
       alert('削除エラー: ' + error.message)
@@ -87,7 +115,7 @@ export default function SitePhotosPage() {
       .getPublicUrl(filePath)
 
     const { error: updateError } = await supabase
-      .from('reports')
+      .from('photos')
       .update({ photo_url: publicUrlData.publicUrl })
       .eq('id', id)
 
@@ -168,6 +196,14 @@ export default function SitePhotosPage() {
                       }}
                     />
                   </button>
+
+                  <div style={{ fontSize: 11, color: '#d1d5db', marginTop: 8, marginBottom: 4 }}>
+                    撮影日: {item.shot_date || '-'}
+                  </div>
+
+                  <div style={{ fontSize: 11, color: '#d1d5db', marginBottom: 8 }}>
+                    作業員: {item.worker_id ? workerMap[item.worker_id] || '-' : '-'}
+                  </div>
 
                   <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                     <button
