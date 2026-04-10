@@ -3,204 +3,155 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import {
-  FileText,
-  SquarePen,
-  Image as ImageIcon,
-  CalendarDays,
-  CalendarPlus,
-  CalendarRange,
-  Bell
-} from 'lucide-react'
 
-export default function Home() {
-  const [message, setMessage] = useState('')
-  const [hasNotification, setHasNotification] = useState(false)
+type Schedule = {
+  id: number
+  title: string
+  date: string
+  location?: string | null
+  description?: string | null
+  created_at?: string
+}
+
+export default function SchedulePage() {
+  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const channel = supabase
-      .channel('realtime-home-notify')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'reports' },
-        () => {
-          setHasNotification(true)
-          setMessage('日報が更新されました')
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'schedules' },
-        () => {
-          setHasNotification(true)
-          setMessage('スケジュールが更新されました')
-        }
-      )
-      .subscribe()
+    fetchSchedules()
+  }, [])
 
-    return () => {
-      supabase.removeChannel(channel)
+  async function fetchSchedules() {
+    setLoading(true)
+
+    const { data, error } = await supabase
+      .from('schedules')
+      .select('*')
+      .order('date', { ascending: true })
+
+    if (error) {
+      console.error('予定取得エラー:', error)
+      setSchedules([])
+      setLoading(false)
+      return
     }
-  }, [])
 
-  useEffect(() => {
-    if (!message) return
-    const timer = setTimeout(() => setMessage(''), 2500)
-    return () => clearTimeout(timer)
-  }, [message])
+    setSchedules(data ?? [])
+    setLoading(false)
+  }
 
-  const today = useMemo(() => {
-    return new Date().toLocaleDateString('ja-JP', {
-      month: 'numeric',
-      day: 'numeric',
-      weekday: 'short'
+  const filteredSchedules = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return schedules.filter((schedule) => {
+      const scheduleDate = new Date(schedule.date)
+      scheduleDate.setHours(0, 0, 0, 0)
+      return scheduleDate >= today
     })
-  }, [])
+  }, [schedules])
 
-  const menuItems = [
-    { href: '/reports', ja: '日報一覧', en: 'Reports', icon: FileText },
-    { href: '/reports/new', ja: '日報登録', en: 'New Report', icon: SquarePen },
-    { href: '/photos', ja: '写真一覧', en: 'Photos', icon: ImageIcon },
-    { href: '/schedules', ja: '予定一覧', en: 'Schedules', icon: CalendarDays },
-    { href: '/schedules/new', ja: '予定登録', en: 'New Schedule', icon: CalendarPlus },
-    { href: '/schedules/calendar', ja: 'カレンダー', en: 'Calendar', icon: CalendarRange }
-  ]
+  function formatDate(dateString: string) {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+    })
+  }
+
+  async function handleDelete(id: number) {
+    const ok = window.confirm('この予定を削除しますか？')
+    if (!ok) return
+
+    const { error } = await supabase.from('schedules').delete().eq('id', id)
+
+    if (error) {
+      alert('削除に失敗しました')
+      console.error(error)
+      return
+    }
+
+    setSchedules((prev) => prev.filter((item) => item.id !== id))
+  }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#000000',
-        padding: 12
-      }}
-    >
-      <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        
-        {/* ヘッダー */}
-        <div
-          style={{
-            background: '#464646', // ← 最終変更
-            borderRadius: 20,
-            padding: 16,
-            color: '#ffffff',
-            marginBottom: 12,
-            position: 'relative'
-          }}
-        >
-          <div style={{ position: 'absolute', top: 14, right: 14 }}>
-            <Bell size={20} />
-            {hasNotification && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  width: 10,
-                  height: 10,
-                  background: '#ef4444',
-                  borderRadius: '50%'
-                }}
-              />
-            )}
+    <main className="min-h-screen bg-gray-50 px-4 py-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">予定一覧</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              過去の日付の予定は表示していません
+            </p>
           </div>
 
-          <div style={{ fontSize: 24, fontWeight: 700 }}>
-            株式会社 玄
-          </div>
-
-          <div style={{ fontSize: 13, color: '#d1d5db', marginTop: 4 }}>
-            今日もお疲れ様です。
-          </div>
-
-          <div style={{ marginTop: 10, fontSize: 13, color: '#ffffff' }}>
-            {today}
-          </div>
+          <Link
+            href="/schedule/new"
+            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            ＋ 予定登録
+          </Link>
         </div>
 
-        {message && (
-          <div
-            style={{
-              background: '#808080',
-              color: '#ffffff',
-              padding: 10,
-              borderRadius: 14,
-              marginBottom: 12,
-              fontSize: 13
-            }}
-          >
-            {message}
+        {loading ? (
+          <div className="rounded-xl bg-white p-6 text-center text-gray-500 shadow-sm">
+            読み込み中...
+          </div>
+        ) : filteredSchedules.length === 0 ? (
+          <div className="rounded-xl bg-white p-6 text-center text-gray-500 shadow-sm">
+            表示する予定はありません
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredSchedules.map((schedule) => (
+              <div
+                key={schedule.id}
+                className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="mb-1 text-sm font-medium text-blue-600">
+                      {formatDate(schedule.date)}
+                    </p>
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {schedule.title}
+                    </h2>
+
+                    {schedule.location ? (
+                      <p className="mt-2 text-sm text-gray-600">
+                        現場: {schedule.location}
+                      </p>
+                    ) : null}
+
+                    {schedule.description ? (
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                        {schedule.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex shrink-0 gap-2">
+                    <Link
+                      href={`/schedule/${schedule.id}/edit`}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      編集
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(schedule.id)}
+                      className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-
-        {/* メニュー */}
-        <div
-          style={{
-            background: '#808080',
-            borderRadius: 20,
-            padding: 12
-          }}
-        >
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 700,
-              marginBottom: 10,
-              color: '#ffffff'
-            }}
-          >
-            メニュー
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 10
-            }}
-          >
-            {menuItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
-                  <div
-                    style={{
-                      background: '#1f1f1f',
-                      borderRadius: 16,
-                      padding: 12,
-                      minHeight: 90,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Icon size={18} color="#ffffff" />
-
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 700,
-                          color: '#ffffff'
-                        }}
-                      >
-                        {item.ja}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: '#d1d5db'
-                        }}
-                      >
-                        {item.en}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
       </div>
-    </div>
+    </main>
   )
 }
