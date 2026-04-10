@@ -79,10 +79,10 @@ export default function Home() {
         {/* ヘッダー */}
         <div
           style={{
-            background: '#1a1a1a',
+            background: '#808080',
             borderRadius: 20,
             padding: 16,
-            color: '#fff',
+            color: '#ffffff',
             marginBottom: 12,
             position: 'relative'
           }}
@@ -109,11 +109,11 @@ export default function Home() {
             株式会社 玄
           </div>
 
-          <div style={{ fontSize: 13, color: '#bbb', marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: '#d1d5db', marginTop: 4 }}>
             今日もお疲れ様です。
           </div>
 
-          <div style={{ marginTop: 10, fontSize: 13, color: '#ccc' }}>
+          <div style={{ marginTop: 10, fontSize: 13, color: '#ffffff' }}>
             {today}
           </div>
         </div>
@@ -122,8 +122,8 @@ export default function Home() {
         {message && (
           <div
             style={{
-              background: '#1a1a1a',
-              color: '#fff',
+              background: '#808080',
+              color: '#ffffff',
               padding: 10,
               borderRadius: 14,
               marginBottom: 12,
@@ -134,10 +134,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* メニュー */}
+        {/* メニュー枠 */}
         <div
           style={{
-            background: '#121212',
+            background: '#808080',
             borderRadius: 20,
             padding: 12
           }}
@@ -147,7 +147,7 @@ export default function Home() {
               fontSize: 16,
               fontWeight: 700,
               marginBottom: 10,
-              color: '#fff'
+              color: '#ffffff'
             }}
           >
             メニュー
@@ -166,24 +166,23 @@ export default function Home() {
                 <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
                   <div
                     style={{
-                      background: '#808080',
+                      background: '#1f1f1f',
                       borderRadius: 16,
                       padding: 12,
                       minHeight: 90,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      transition: '0.15s'
+                      justifyContent: 'space-between'
                     }}
                   >
-                    <Icon size={18} color="#000" />
+                    <Icon size={18} color="#ffffff" />
 
                     <div>
                       <div
                         style={{
                           fontSize: 15,
                           fontWeight: 700,
-                          color: '#000'
+                          color: '#ffffff'
                         }}
                       >
                         {item.ja}
@@ -191,7 +190,7 @@ export default function Home() {
                       <div
                         style={{
                           fontSize: 11,
-                          color: '#1f1f1f'
+                          color: '#d1d5db'
                         }}
                       >
                         {item.en}
