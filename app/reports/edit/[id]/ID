@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 type Worker = {
-  id: string
+  id: string | number
   name: string
 }
 
@@ -60,7 +60,7 @@ export default function EditReportPage() {
     if (data) {
       setDate(data.date || '')
       setSite(data.site || '')
-      setWorkerId(data.worker_id || '')
+      setWorkerId(data.worker_id ? String(data.worker_id) : '')
       setContent(data.content || '')
       setWorkHours(String(data.work_hours ?? 0))
       setOvertimeHours(String(data.overtime_hours ?? 0))
@@ -104,7 +104,7 @@ export default function EditReportPage() {
       .update({
         date,
         site,
-        worker_id: workerId || null,
+        worker_id: workerId ? Number(workerId) : null,
         content,
         work_hours: parsedWorkHours,
         overtime_hours: parsedOvertimeHours,
@@ -170,7 +170,7 @@ export default function EditReportPage() {
           >
             <option value="">作業員を選択</option>
             {workers.map((worker) => (
-              <option key={worker.id} value={worker.id}>
+              <option key={String(worker.id)} value={String(worker.id)}>
                 {worker.name}
               </option>
             ))}
