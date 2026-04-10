@@ -47,6 +47,16 @@ export default function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!message) return
+
+    const timer = setTimeout(() => {
+      setMessage('')
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [message])
+
   return (
     <div
       style={{
