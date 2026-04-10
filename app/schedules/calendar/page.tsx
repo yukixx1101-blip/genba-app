@@ -133,8 +133,11 @@ export default function CalendarPage() {
   }
 
   const handleClickDay = (date: Date) => {
-    const formatted = formatDate(date)
-    router.push(`/schedules/new?date=${formatted}`)
+    setValue(date)
+  }
+
+  const handleCreateSchedule = () => {
+    router.push(`/schedules/new?date=${selectedDate}`)
   }
 
   return (
@@ -287,7 +290,7 @@ export default function CalendarPage() {
               color: '#d1d5db'
             }}
           >
-            日付をタップするとその日付で予定登録できます
+            日付タップで内容確認、下のボタンでその日付の予定登録
           </div>
         </div>
 
@@ -298,8 +301,33 @@ export default function CalendarPage() {
             padding: 12
           }}
         >
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff', marginBottom: 10 }}>
-            {selectedDate}
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 10
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
+              {selectedDate}
+            </div>
+
+            <button
+              onClick={handleCreateSchedule}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 10,
+                border: 'none',
+                background: '#1f1f1f',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: 12
+              }}
+            >
+              この日で予定登録
+            </button>
           </div>
 
           <div style={{ marginBottom: 16 }}>
