@@ -1,118 +1,101 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-type ReportPhoto = {
+type Report = {
   id: string
-  date: string
-  site_name: string | null
-  content: string
+  site: string | null
   photo_url: string | null
 }
 
 export default function PhotosPage() {
-  const [photos, setPhotos] = useState<ReportPhoto[]>([])
+  const [reports, setReports] = useState<Report[]>([])
 
   useEffect(() => {
-    fetchPhotos()
+    fetchData()
   }, [])
 
-  const fetchPhotos = async () => {
-    const { data, error } = await supabase
+  const fetchData = async () => {
+    const { data } = await supabase
       .from('reports')
-      .select('id, date, site_name, content, photo_url')
-      .not('photo_url', 'is', null)
-      .order('site_name', { ascending: true })
-      .order('date', { ascending: false })
+      .select('id, site, photo_url')
 
-    if (error) {
-      alert('取得エラー: ' + error.message)
-      return
-    }
-
-    setPhotos((data as ReportPhoto[]) || [])
+    setReports(data || [])
   }
 
-  const groupedPhotos = useMemo(() => {
-    const groups: Record<string, ReportPhoto[]> = {}
+  const grouped = useMemo(() => {
+    const map: Record<string, Report[]> = {}
 
-    photos.forEach((item) => {
-      const key = item.site_name?.trim() || '未分類'
-      if (!groups[key]) {
-        groups[key] = []
-      }
-      groups[key].push(item)
+    reports.forEach((r) => {
+      if (!r.photo_url) return
+      const key = r.site || '未設定'
+
+      if (!map[key]) map[key] = []
+      map[key].push(r)
     })
 
-    return groups
-  }, [photos])
+    return map
+  }, [reports])
 
   return (
-    <div style={{ padding: 16, maxWidth: 900, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
-        写真一覧
-      </h1>
+    <div style={{ background: '#000', minHeight: '100vh', padding: 12 }}>
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <div style={header}>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>写真一覧</div>
+          <div style={sub}>Photos</div>
+        </div>
 
-      {Object.keys(groupedPhotos).length === 0 ? (
-        <p>写真がありません</p>
-      ) : (
-        Object.entries(groupedPhotos).map(([siteName, items]) => (
-          <div key={siteName} style={{ marginBottom: 32 }}>
-            <h2
-              style={{
-                fontSize: 20,
-                fontWeight: 'bold',
-                marginBottom: 12,
-                paddingBottom: 8,
-                borderBottom: '2px solid #ddd'
-              }}
-            >
-              🏗 {siteName}
-            </h2>
+        {Object.keys(grouped).map((site) => (
+          <div key={site} style={card}>
+            <div style={{ fontWeight: 700, marginBottom: 8 }}>{site}</div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: 12
-              }}
-            >
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    border: '1px solid #ddd',
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    background: '#fff'
-                  }}
-                >
-                  {item.photo_url && (
-                    <img
-                      src={item.photo_url}
-                      alt="現場写真"
-                      style={{
-                        width: '100%',
-                        height: 200,
-                        objectFit: 'cover',
-                        display: 'block'
-                      }}
-                    />
-                  )}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <Link href={`/photos/${encodeURIComponent(site)}`} style={link}>
+                <button style={btn}>一覧</button>
+              </Link>
 
-                  <div style={{ padding: 12 }}>
-                    <p style={{ marginBottom: 6 }}>📅 {item.date}</p>
-                    <p style={{ fontSize: 14, color: '#444' }}>
-                      📝 {item.content}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              <Link href={`/reports/new?site=${site}`} style={link}>
+                <button style={btn}>アップロード</button>
+              </Link>
+            </div>
+
+            <div style={{ fontSize: 12, color: '#aaa' }}>
+              写真 {grouped[site].length}枚
             </div>
           </div>
-        ))
-      )}
+        ))}
+      </div>
     </div>
   )
 }
+
+const header = {
+  background: '#464646',
+  borderRadius: 20,
+  padding: 16,
+  color: '#fff',
+  marginBottom: 12
+}
+
+const card = {
+  background: '#1f1f1f',
+  borderRadius: 16,
+  padding: 12,
+  marginBottom: 10,
+  color: '#fff'
+}
+
+const btn = {
+  width: '100%',
+  padding: 10,
+  borderRadius: 10,
+  border: 'none',
+  background: '#808080',
+  color: '#000',
+  fontWeight: 700
+}
+
+const sub = { fontSize: 12, color: '#d1d5db' }
+const link = { flex: 1, textDecoration: 'none' }
