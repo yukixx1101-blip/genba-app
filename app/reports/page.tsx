@@ -10,19 +10,49 @@
   }}
 >
   <Link href="/reports/new" style={{ textDecoration: 'none' }}>
-    <button style={{ width: '100%', padding: 11, borderRadius: 12, border: 'none', background: '#1f1f1f', color: '#fff', fontWeight: 700 }}>
+    <button
+      style={{
+        width: '100%',
+        padding: 11,
+        borderRadius: 12,
+        border: 'none',
+        background: '#1f1f1f',
+        color: '#fff',
+        fontWeight: 700
+      }}
+    >
       日報登録
     </button>
   </Link>
 
   <Link href={printHref} style={{ textDecoration: 'none' }}>
-    <button style={{ width: '100%', padding: 11, borderRadius: 12, border: 'none', background: '#1f1f1f', color: '#fff', fontWeight: 700 }}>
+    <button
+      style={{
+        width: '100%',
+        padding: 11,
+        borderRadius: 12,
+        border: 'none',
+        background: '#1f1f1f',
+        color: '#fff',
+        fontWeight: 700
+      }}
+    >
       PDF出力
     </button>
   </Link>
 
   <Link href="/reports/monthly" style={{ textDecoration: 'none' }}>
-    <button style={{ width: '100%', padding: 11, borderRadius: 12, border: 'none', background: '#1f1f1f', color: '#fff', fontWeight: 700 }}>
+    <button
+      style={{
+        width: '100%',
+        padding: 11,
+        borderRadius: 12,
+        border: 'none',
+        background: '#1f1f1f',
+        color: '#fff',
+        fontWeight: 700
+      }}
+    >
       月間まとめ
     </button>
   </Link>
