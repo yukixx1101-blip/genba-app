@@ -5,13 +5,6 @@ import Link from 'next/link'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
 import { supabase } from '@/lib/supabase'
-import {
-  CalendarDays,
-  ClipboardList,
-  FileText,
-  MapPin,
-  User
-} from 'lucide-react'
 
 type Schedule = {
   id: string
@@ -25,466 +18,253 @@ type Report = {
   id: string
   date: string | null
   site: string | null
-  worker_id: string | null
   content: string | null
-  photo_url: string | null
 }
 
-type Worker = {
-  id: string
-  name: string
-}
-
-export default function ScheduleCalendarPage() {
+export default function CalendarPage() {
   const [value, setValue] = useState<Date>(new Date())
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [reports, setReports] = useState<Report[]>([])
-  const [workers, setWorkers] = useState<Worker[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchAll()
   }, [])
 
   const fetchAll = async () => {
-    setLoading(true)
+    const { data: schedulesData } = await supabase
+      .from('schedules')
+      .select('*')
 
-    const [
-      { data: schedulesData, error: schedulesError },
-      { data: reportsData, error: reportsError },
-      { data: workersData, error: workersError }
-    ] = await Promise.all([
-      supabase
-        .from('schedules')
-        .select('id, date, site_name, work_content, memo')
-        .order('date', { ascending: true }),
-      supabase
-        .from('reports')
-        .select('id, date, site, worker_id, content, photo_url')
-        .order('date', { ascending: true }),
-      supabase
-        .from('workers')
-        .select('id, name')
-        .order('name', { ascending: true })
-    ])
+    const { data: reportsData } = await supabase
+      .from('reports')
+      .select('*')
 
-    if (schedulesError) {
-      alert('予定取得エラー: ' + schedulesError.message)
-      setLoading(false)
-      return
-    }
-
-    if (reportsError) {
-      alert('日報取得エラー: ' + reportsError.message)
-      setLoading(false)
-      return
-    }
-
-    if (workersError) {
-      alert('作業員取得エラー: ' + workersError.message)
-      setLoading(false)
-      return
-    }
-
-    setSchedules((schedulesData as Schedule[]) || [])
-    setReports((reportsData as Report[]) || [])
-    setWorkers((workersData as Worker[]) || [])
-    setLoading(false)
+    setSchedules(schedulesData || [])
+    setReports(reportsData || [])
   }
-
-  const workerMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    workers.forEach((worker) => {
-      map[worker.id] = worker.name
-    })
-    return map
-  }, [workers])
 
   const formatDate = (date: Date) => {
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    return `${y}-${m}-${d}`
+    return date.toISOString().slice(0, 10)
   }
 
-  const normalizeDbDate = (dateText: string | null) => {
-    if (!dateText) return ''
-    return String(dateText).slice(0, 10)
-  }
-
-  const selectedDateText = formatDate(value)
+  const selectedDate = formatDate(value)
 
   const selectedSchedules = useMemo(() => {
-    return schedules.filter((item) => normalizeDbDate(item.date) === selectedDateText)
-  }, [schedules, selectedDateText])
+    return schedules.filter((s) => s.date === selectedDate)
+  }, [schedules, selectedDate])
 
   const selectedReports = useMemo(() => {
-    return reports.filter((item) => normalizeDbDate(item.date) === selectedDateText)
-  }, [reports, selectedDateText])
+    return reports.filter((r) => r.date === selectedDate)
+  }, [reports, selectedDate])
 
   const hasSchedule = (date: Date) => {
-    const calendarDateText = formatDate(date)
-    return schedules.some((item) => normalizeDbDate(item.date) === calendarDateText)
+    const d = formatDate(date)
+    return schedules.some((s) => s.date === d)
   }
 
   const hasReport = (date: Date) => {
-    const calendarDateText = formatDate(date)
-    return reports.some((item) => normalizeDbDate(item.date) === calendarDateText)
+    const d = formatDate(date)
+    return reports.some((r) => r.date === d)
   }
 
-  const handleDeleteSchedule = async (id: string) => {
-    const ok = confirm('この予定を削除しますか？')
-    if (!ok) return
-
-    const { error } = await supabase.from('schedules').delete().eq('id', id)
-
-    if (error) {
-      alert('削除エラー: ' + error.message)
-      return
-    }
-
-    fetchAll()
-  }
-
-  const tileContent = ({ date, view }: { date: Date; view: string }) => {
+  const tileContent = ({ date, view }: any) => {
     if (view !== 'month') return null
 
-    const scheduleExists = hasSchedule(date)
-    const reportExists = hasReport(date)
+    const schedule = hasSchedule(date)
+    const report = hasReport(date)
 
-    if (!scheduleExists && !reportExists) return null
+    if (!schedule && !report) return null
 
     return (
       <div
         style={{
-          marginTop: 3,
+          marginTop: 2,
           display: 'flex',
           justifyContent: 'center',
-          gap: 4
+          gap: 3
         }}
       >
-        {scheduleExists && (
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: 999,
-              background: '#ffffff',
-              display: 'inline-block'
-            }}
-          />
+        {schedule && (
+          <span style={dotWhite} />
         )}
-        {reportExists && (
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: 999,
-              background: '#d1d5db',
-              display: 'inline-block'
-            }}
-          />
+        {report && (
+          <span style={dotGray} />
         )}
       </div>
     )
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#000000',
-        padding: 12
-      }}
-    >
+    <div style={{ background: '#000', minHeight: '100vh', padding: 12 }}>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <div
-          style={{
-            background: '#464646',
-            borderRadius: 20,
-            padding: 16,
-            color: '#ffffff',
-            marginBottom: 12
-          }}
-        >
-          <div style={{ fontSize: 24, fontWeight: 700 }}>カレンダー</div>
-          <div style={{ fontSize: 12, color: '#d1d5db', marginTop: 4 }}>
-            Schedule & Reports
+
+        {/* ヘッダー */}
+        <div style={header}>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>
+            カレンダー
+          </div>
+          <div style={subText}>
+            Calendar
           </div>
         </div>
 
-        <div
-          style={{
-            background: '#808080',
-            borderRadius: 20,
-            padding: 12,
-            marginBottom: 12,
-            display: 'flex',
-            gap: 8
-          }}
-        >
-          <Link href="/schedules" style={{ flex: 1, textDecoration: 'none' }}>
-            <button
-              style={{
-                width: '100%',
-                padding: 10,
-                borderRadius: 12,
-                border: 'none',
-                background: '#1f1f1f',
-                color: '#ffffff',
-                fontWeight: 700
-              }}
-            >
-              一覧へ戻る
-            </button>
+        {/* ナビ */}
+        <div style={navBox}>
+          <Link href="/schedules" style={link}>
+            <button style={btn}>一覧</button>
           </Link>
 
-          <Link href="/schedules/new" style={{ flex: 1, textDecoration: 'none' }}>
-            <button
-              style={{
-                width: '100%',
-                padding: 10,
-                borderRadius: 12,
-                border: 'none',
-                background: '#1f1f1f',
-                color: '#ffffff',
-                fontWeight: 700
-              }}
-            >
-              新規登録
-            </button>
+          <Link href="/schedules/new" style={link}>
+            <button style={btn}>登録</button>
           </Link>
         </div>
 
-        <div
-          style={{
-            background: '#808080',
-            padding: 12,
-            borderRadius: 20,
-            marginBottom: 12
-          }}
-        >
-          <div
-            style={{
-              background: '#1f1f1f',
-              borderRadius: 16,
-              padding: 10
-            }}
-          >
-            <Calendar
-              onChange={(nextValue) => setValue(nextValue as Date)}
-              value={value}
-              locale="ja-JP"
-              tileContent={tileContent}
-            />
-          </div>
-
-          <div
-            style={{
-              marginTop: 10,
-              fontSize: 12,
-              color: '#ffffff',
-              display: 'flex',
-              gap: 12,
-              flexWrap: 'wrap'
-            }}
-          >
-            <span>● 白: 予定あり</span>
-            <span>● 薄グレー: 日報あり</span>
-          </div>
+        {/* カレンダー */}
+        <div style={card}>
+          <Calendar
+            onChange={(v) => setValue(v as Date)}
+            value={value}
+            locale="ja-JP"
+            tileContent={tileContent}
+          />
         </div>
 
-        <div
-          style={{
-            background: '#808080',
-            borderRadius: 20,
-            padding: 12
-          }}
-        >
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#ffffff', marginBottom: 10 }}>
-            {selectedDateText}
+        {/* 選択日 */}
+        <div style={card}>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
+            {selectedDate}
           </div>
 
-          <div style={{ marginBottom: 14 }}>
-            <div
-              style={{
-                fontSize: 13,
-                color: '#d1d5db',
-                marginBottom: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              <CalendarDays size={15} />
-              予定
-            </div>
-
+          {/* 予定 */}
+          <Section title="予定">
             {selectedSchedules.length === 0 ? (
-              <div
-                style={{
-                  background: '#1f1f1f',
-                  color: '#d1d5db',
-                  borderRadius: 16,
-                  padding: 12
-                }}
-              >
-                予定はありません
-              </div>
+              <Empty text="予定なし" />
             ) : (
-              selectedSchedules.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    background: '#1f1f1f',
-                    borderRadius: 16,
-                    padding: 12,
-                    marginBottom: 8,
-                    color: '#ffffff'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <MapPin size={14} />
-                    <span>{item.site_name}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <ClipboardList size={14} />
-                    <span>{item.work_content}</span>
-                  </div>
-                  <div style={{ fontSize: 13, color: '#d1d5db' }}>
-                    {item.memo || 'メモなし'}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                    <Link href={`/schedules/${item.id}/edit`} style={{ flex: 1, textDecoration: 'none' }}>
-                      <button
-                        style={{
-                          width: '100%',
-                          padding: 9,
-                          borderRadius: 10,
-                          border: 'none',
-                          background: '#808080',
-                          color: '#000000',
-                          fontWeight: 700
-                        }}
-                      >
-                        編集
-                      </button>
-                    </Link>
-
-                    <button
-                      onClick={() => handleDeleteSchedule(item.id)}
-                      style={{
-                        flex: 1,
-                        padding: 9,
-                        borderRadius: 10,
-                        border: 'none',
-                        background: '#464646',
-                        color: '#ffffff',
-                        fontWeight: 700
-                      }}
-                    >
-                      削除
-                    </button>
-                  </div>
-                </div>
+              selectedSchedules.map((s) => (
+                <Item key={s.id}>
+                  <div style={title}>{s.site_name}</div>
+                  <div style={text}>{s.work_content}</div>
+                  <div style={subText}>{s.memo || 'メモなし'}</div>
+                </Item>
               ))
             )}
-          </div>
+          </Section>
 
-          <div>
-            <div
-              style={{
-                fontSize: 13,
-                color: '#d1d5db',
-                marginBottom: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              <FileText size={15} />
-              日報
-            </div>
-
+          {/* 日報 */}
+          <Section title="日報">
             {selectedReports.length === 0 ? (
-              <div
-                style={{
-                  background: '#1f1f1f',
-                  color: '#d1d5db',
-                  borderRadius: 16,
-                  padding: 12
-                }}
-              >
-                日報はありません
-              </div>
+              <Empty text="日報なし" />
             ) : (
-              selectedReports.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    background: '#1f1f1f',
-                    borderRadius: 16,
-                    padding: 12,
-                    marginBottom: 8,
-                    color: '#ffffff'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <MapPin size={14} />
-                    <span>{item.site || '現場未入力'}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <User size={14} />
-                    <span>
-                      {item.worker_id ? workerMap[item.worker_id] || '未選択' : '未選択'}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: 14, lineHeight: 1.6 }}>{item.content || '内容なし'}</div>
-
-                  {item.photo_url && (
-                    <img
-                      src={item.photo_url}
-                      alt="日報写真"
-                      style={{
-                        width: '100%',
-                        marginTop: 10,
-                        borderRadius: 12
-                      }}
-                    />
-                  )}
-
-                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                    <Link href={`/reports/${item.id}/edit`} style={{ flex: 1, textDecoration: 'none' }}>
-                      <button
-                        style={{
-                          width: '100%',
-                          padding: 9,
-                          borderRadius: 10,
-                          border: 'none',
-                          background: '#808080',
-                          color: '#000000',
-                          fontWeight: 700
-                        }}
-                      >
-                        編集
-                      </button>
-                    </Link>
-                  </div>
-                </div>
+              selectedReports.map((r) => (
+                <Item key={r.id}>
+                  <div style={title}>{r.site || '-'}</div>
+                  <div style={text}>{r.content || '-'}</div>
+                </Item>
               ))
             )}
-          </div>
+          </Section>
         </div>
 
-        {loading && (
-          <div style={{ color: '#d1d5db', textAlign: 'center', marginTop: 12 }}>
-            読み込み中...
-          </div>
-        )}
       </div>
     </div>
   )
+}
+
+/* コンポーネント */
+const Section = ({ title, children }: any) => (
+  <div style={{ marginBottom: 16 }}>
+    <div style={{ fontSize: 12, color: '#aaa', marginBottom: 6 }}>
+      {title}
+    </div>
+    {children}
+  </div>
+)
+
+const Item = ({ children }: any) => (
+  <div style={item}>{children}</div>
+)
+
+const Empty = ({ text }: any) => (
+  <div style={empty}>{text}</div>
+)
+
+/* スタイル */
+const header = {
+  background: '#464646',
+  borderRadius: 20,
+  padding: 16,
+  color: '#fff',
+  marginBottom: 12
+}
+
+const navBox = {
+  background: '#808080',
+  borderRadius: 16,
+  padding: 10,
+  marginBottom: 12,
+  display: 'flex',
+  gap: 8
+}
+
+const card = {
+  background: '#808080',
+  borderRadius: 20,
+  padding: 12,
+  marginBottom: 12
+}
+
+const item = {
+  background: '#1f1f1f',
+  borderRadius: 12,
+  padding: 10,
+  marginBottom: 8,
+  color: '#fff'
+}
+
+const empty = {
+  background: '#1f1f1f',
+  borderRadius: 12,
+  padding: 10,
+  color: '#aaa'
+}
+
+const title = {
+  fontWeight: 700,
+  marginBottom: 4
+}
+
+const text = {
+  fontSize: 14,
+  marginBottom: 4
+}
+
+const subText = {
+  fontSize: 12,
+  color: '#aaa'
+}
+
+const btn = {
+  width: '100%',
+  padding: 10,
+  borderRadius: 10,
+  border: 'none',
+  background: '#1f1f1f',
+  color: '#fff',
+  fontWeight: 700
+}
+
+const link = { flex: 1, textDecoration: 'none' }
+
+const dotWhite = {
+  width: 6,
+  height: 6,
+  borderRadius: '50%',
+  background: '#fff'
+}
+
+const dotGray = {
+  width: 6,
+  height: 6,
+  borderRadius: '50%',
+  background: '#aaa'
 }
