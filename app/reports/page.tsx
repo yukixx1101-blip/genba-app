@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { User, Calendar, MapPin, FileText } from 'lucide-react'
 
 type Report = {
   id: string
@@ -21,146 +22,206 @@ type Worker = {
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [workers, setWorkers] = useState<Worker[]>([])
+  const [selectedWorker, setSelectedWorker] = useState<string>('all')
 
   useEffect(() => {
     fetchAll()
   }, [])
 
   const fetchAll = async () => {
-    const { data: reportsData, error: reportsError } = await supabase
+    const { data: reportsData } = await supabase
       .from('reports')
-      .select('id, date, site, worker_id, content, photo_url')
-      .order('date', { ascending: false, nullsFirst: false })
+      .select('*')
+      .order('date', { ascending: false })
 
-    if (reportsError) {
-      alert('日報取得エラー: ' + reportsError.message)
-      return
-    }
-
-    const { data: workersData, error: workersError } = await supabase
+    const { data: workersData } = await supabase
       .from('workers')
-      .select('id, name')
-      .order('name', { ascending: true })
+      .select('*')
+      .order('name')
 
-    if (workersError) {
-      alert('作業員取得エラー: ' + workersError.message)
-      return
-    }
-
-    setReports((reportsData as Report[]) || [])
-    setWorkers((workersData as Worker[]) || [])
-  }
-
-  const handleDelete = async (id: string) => {
-    const ok = confirm('この日報を削除しますか？')
-    if (!ok) return
-
-    const { error } = await supabase.from('reports').delete().eq('id', id)
-
-    if (error) {
-      alert('削除エラー: ' + error.message)
-      return
-    }
-
-    alert('削除しました')
-    fetchAll()
+    setReports(reportsData || [])
+    setWorkers(workersData || [])
   }
 
   const workerMap = useMemo(() => {
     const map: Record<string, string> = {}
-    workers.forEach((worker) => {
-      map[worker.id] = worker.name
-    })
+    workers.forEach((w) => (map[w.id] = w.name))
     return map
   }, [workers])
 
-  return (
-    <div style={{ padding: 16, maxWidth: 700, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-        日報一覧
-      </h1>
+  const filteredReports = useMemo(() => {
+    if (selectedWorker === 'all') return reports
+    return reports.filter((r) => r.worker_id === selectedWorker)
+  }, [reports, selectedWorker])
 
-      <Link href="/reports/new">
-        <button
+  return (
+    <div style={{ background: '#000', minHeight: '100vh', padding: 12 }}>
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+
+        {/* タイトル */}
+        <div
           style={{
-            width: '100%',
-            padding: 12,
-            marginBottom: 16,
-            borderRadius: 8,
-            border: 'none',
-            background: '#16a34a',
-            color: '#fff',
-            fontSize: 16
+            background: '#464646',
+            padding: 16,
+            borderRadius: 20,
+            marginBottom: 12,
+            color: '#fff'
           }}
         >
-          ＋ 日報登録
-        </button>
-      </Link>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>
+            日報一覧
+          </div>
+          <div style={{ fontSize: 12, color: '#d1d5db' }}>
+            Reports
+          </div>
+        </div>
 
-      {reports.length === 0 ? (
-        <p>まだ日報がありません</p>
-      ) : (
-        reports.map((item) => (
-          <div
-            key={item.id}
+        {/* 新規ボタン */}
+        <Link href="/reports/new">
+          <button
             style={{
-              border: '1px solid #ddd',
-              borderRadius: 8,
+              width: '100%',
               padding: 12,
               marginBottom: 12,
-              background: '#fff'
+              borderRadius: 14,
+              border: 'none',
+              background: '#1f1f1f',
+              color: '#fff',
+              fontWeight: 700
             }}
           >
-            <p>📅 {item.date || '未入力'}</p>
-            <p>🏗 {item.site || '未入力'}</p>
-            <p>👷 {item.worker_id ? workerMap[item.worker_id] || '未選択' : '未選択'}</p>
-            <p>📝 {item.content || '未入力'}</p>
+            日報登録
+          </button>
+        </Link>
 
-            {item.photo_url && (
-              <img
-                src={item.photo_url}
-                alt="日報写真"
-                style={{
-                  width: '100%',
-                  marginTop: 12,
-                  borderRadius: 8
-                }}
-              />
-            )}
+        {/* 作業員フィルター */}
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 16,
+            padding: 8,
+            display: 'flex',
+            overflowX: 'auto',
+            gap: 6,
+            marginBottom: 12
+          }}
+        >
+          <button
+            onClick={() => setSelectedWorker('all')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 12,
+              border: 'none',
+              background: selectedWorker === 'all' ? '#1f1f1f' : '#bfbfbf',
+              color: '#fff',
+              fontSize: 12
+            }}
+          >
+            全体
+          </button>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <Link href={`/reports/${item.id}/edit`} style={{ flex: 1 }}>
-                <button
+          {workers.map((w) => (
+            <button
+              key={w.id}
+              onClick={() => setSelectedWorker(w.id)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 12,
+                border: 'none',
+                background:
+                  selectedWorker === w.id ? '#1f1f1f' : '#bfbfbf',
+                color: '#fff',
+                fontSize: 12,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {w.name}
+            </button>
+          ))}
+        </div>
+
+        {/* リスト */}
+        {filteredReports.length === 0 ? (
+          <div style={{ color: '#aaa', textAlign: 'center' }}>
+            データなし
+          </div>
+        ) : (
+          filteredReports.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                background: '#1f1f1f',
+                borderRadius: 16,
+                padding: 12,
+                marginBottom: 10,
+                color: '#fff'
+              }}
+            >
+              <div style={{ fontSize: 13, color: '#d1d5db', marginBottom: 6 }}>
+                <Calendar size={14} /> {item.date || '-'}
+              </div>
+
+              <div style={{ fontSize: 13, marginBottom: 4 }}>
+                <MapPin size={14} /> {item.site || '-'}
+              </div>
+
+              <div style={{ fontSize: 13, marginBottom: 4 }}>
+                <User size={14} />{' '}
+                {item.worker_id ? workerMap[item.worker_id] : '-'}
+              </div>
+
+              <div style={{ fontSize: 14, marginTop: 6 }}>
+                <FileText size={14} /> {item.content || '-'}
+              </div>
+
+              {item.photo_url && (
+                <img
+                  src={item.photo_url}
                   style={{
                     width: '100%',
-                    padding: 10,
-                    background: '#2563eb',
-                    color: '#fff',
+                    borderRadius: 10,
+                    marginTop: 8
+                  }}
+                />
+              )}
+
+              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                <Link href={`/reports/${item.id}/edit`} style={{ flex: 1 }}>
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: 8,
+                      borderRadius: 10,
+                      border: 'none',
+                      background: '#808080',
+                      color: '#000'
+                    }}
+                  >
+                    編集
+                  </button>
+                </Link>
+
+                <button
+                  onClick={async () => {
+                    await supabase.from('reports').delete().eq('id', item.id)
+                    fetchAll()
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: 8,
+                    borderRadius: 10,
                     border: 'none',
-                    borderRadius: 6
+                    background: '#464646',
+                    color: '#fff'
                   }}
                 >
-                  編集
+                  削除
                 </button>
-              </Link>
-
-              <button
-                onClick={() => handleDelete(item.id)}
-                style={{
-                  flex: 1,
-                  padding: 10,
-                  background: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6
-                }}
-              >
-                削除
-              </button>
+              </div>
             </div>
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
     </div>
   )
 }
