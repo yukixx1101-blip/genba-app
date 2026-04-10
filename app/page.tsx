@@ -3,6 +3,14 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import {
+  FileText,
+  SquarePen,
+  Image as ImageIcon,
+  CalendarDays,
+  CalendarPlus,
+  CalendarRange
+} from 'lucide-react'
 
 export default function Home() {
   const [message, setMessage] = useState('')
@@ -69,32 +77,38 @@ export default function Home() {
     {
       href: '/reports',
       ja: '日報一覧',
-      en: 'Reports'
+      en: 'Reports',
+      icon: FileText
     },
     {
       href: '/reports/new',
       ja: '日報登録',
-      en: 'New Report'
+      en: 'New Report',
+      icon: SquarePen
     },
     {
       href: '/photos',
       ja: '写真一覧',
-      en: 'Photos'
+      en: 'Photos',
+      icon: ImageIcon
     },
     {
       href: '/schedules',
       ja: '予定一覧',
-      en: 'Schedules'
+      en: 'Schedules',
+      icon: CalendarDays
     },
     {
       href: '/schedules/new',
       ja: '予定登録',
-      en: 'New Schedule'
+      en: 'New Schedule',
+      icon: CalendarPlus
     },
     {
       href: '/schedules/calendar',
       ja: 'カレンダー',
-      en: 'Calendar'
+      en: 'Calendar',
+      icon: CalendarRange
     }
   ]
 
@@ -102,7 +116,7 @@ export default function Home() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#f3f4f6',
+        background: '#f5f5f5',
         padding: '12px 12px 20px'
       }}
     >
@@ -115,11 +129,11 @@ export default function Home() {
       >
         <div
           style={{
-            background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+            background: '#111111',
             borderRadius: 22,
             padding: 18,
             color: '#ffffff',
-            boxShadow: '0 14px 32px rgba(17, 24, 39, 0.22)',
+            boxShadow: '0 14px 30px rgba(0, 0, 0, 0.16)',
             marginBottom: 12
           }}
         >
@@ -147,7 +161,7 @@ export default function Home() {
                 style={{
                   marginTop: 6,
                   fontSize: 13,
-                  color: '#d1d5db',
+                  color: '#d4d4d4',
                   lineHeight: 1.6
                 }}
               >
@@ -157,7 +171,7 @@ export default function Home() {
 
             <div
               style={{
-                minWidth: 86,
+                minWidth: 88,
                 textAlign: 'center',
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.12)',
@@ -168,9 +182,9 @@ export default function Home() {
               <div
                 style={{
                   fontSize: 11,
-                  color: '#9ca3af',
+                  color: '#bdbdbd',
                   marginBottom: 4,
-                  letterSpacing: '0.04em'
+                  letterSpacing: '0.06em'
                 }}
               >
                 TODAY
@@ -192,14 +206,14 @@ export default function Home() {
           <div
             style={{
               background: '#ffffff',
-              color: '#111827',
-              border: '1px solid #d1d5db',
+              color: '#111111',
+              border: '1px solid #d9d9d9',
               borderRadius: 16,
               padding: '11px 14px',
               marginBottom: 12,
               fontSize: 13,
               fontWeight: 600,
-              boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)'
+              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.04)'
             }}
           >
             {message}
@@ -211,38 +225,34 @@ export default function Home() {
             background: '#ffffff',
             borderRadius: 22,
             padding: 14,
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 12px 28px rgba(15, 23, 42, 0.06)'
+            border: '1px solid #e4e4e4',
+            boxShadow: '0 10px 24px rgba(0, 0, 0, 0.05)'
           }}
         >
           <div
             style={{
-              display: 'flex',
-              alignItems: 'end',
-              justifyContent: 'space-between',
               marginBottom: 12
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: '#111827',
-                  lineHeight: 1.4
-                }}
-              >
-                メニュー
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                  marginTop: 2
-                }}
-              >
-                Quick Access
-              </div>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: '#111111',
+                lineHeight: 1.4
+              }}
+            >
+              メニュー
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: '#7a7a7a',
+                marginTop: 2,
+                letterSpacing: '0.04em'
+              }}
+            >
+              Quick Access
             </div>
           </div>
 
@@ -253,55 +263,73 @@ export default function Home() {
               gap: 10
             }}
           >
-            {menuItems.map((item, index) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  textDecoration: 'none'
-                }}
-              >
-                <div
+            {menuItems.map((item, index) => {
+              const Icon = item.icon
+              const isDark = index === 0 || index === 3
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
                   style={{
-                    background: index === 0 || index === 3 ? '#111827' : '#ffffff',
-                    color: index === 0 || index === 3 ? '#ffffff' : '#111827',
-                    border: index === 0 || index === 3 ? '1px solid #111827' : '1px solid #d1d5db',
-                    borderRadius: 18,
-                    padding: '16px 14px',
-                    minHeight: 88,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    boxShadow:
-                      index === 0 || index === 3
-                        ? '0 10px 20px rgba(17, 24, 39, 0.14)'
-                        : '0 6px 16px rgba(15, 23, 42, 0.04)'
+                    textDecoration: 'none'
                   }}
                 >
                   <div
                     style={{
-                      fontSize: 17,
-                      fontWeight: 700,
-                      lineHeight: 1.4,
-                      marginBottom: 4,
-                      letterSpacing: '0.01em'
+                      background: isDark ? '#111111' : '#f8f8f8',
+                      color: isDark ? '#ffffff' : '#111111',
+                      border: isDark ? '1px solid #111111' : '1px solid #dddddd',
+                      borderRadius: 18,
+                      padding: '14px 14px',
+                      minHeight: 94,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: isDark
+                        ? '0 10px 20px rgba(0, 0, 0, 0.10)'
+                        : '0 4px 12px rgba(0, 0, 0, 0.04)'
                     }}
                   >
-                    {item.ja}
-                  </div>
+                    <div
+                      style={{
+                        marginBottom: 10
+                      }}
+                    >
+                      <Icon
+                        size={18}
+                        strokeWidth={1.75}
+                        color={isDark ? '#ffffff' : '#111111'}
+                      />
+                    </div>
 
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: index === 0 || index === 3 ? '#d1d5db' : '#6b7280',
-                      letterSpacing: '0.05em'
-                    }}
-                  >
-                    {item.en}
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 17,
+                          fontWeight: 700,
+                          lineHeight: 1.35,
+                          marginBottom: 4,
+                          letterSpacing: '0.01em'
+                        }}
+                      >
+                        {item.ja}
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: isDark ? '#cfcfcf' : '#6f6f6f',
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        {item.en}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              )
+            })}
           </div>
         </div>
       </div>
