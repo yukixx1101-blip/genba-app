@@ -4,24 +4,25 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-export default function EditSchedule() {
+export default function EditSchedulePage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
 
   const [date, setDate] = useState('')
-  const [site, setSite] = useState('')
-  const [content, setContent] = useState('')
+  const [siteName, setSiteName] = useState('')
+  const [workContent, setWorkContent] = useState('')
   const [memo, setMemo] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetchData()
+    fetchSchedule()
   }, [])
 
-  const fetchData = async () => {
+  const fetchSchedule = async () => {
     const { data, error } = await supabase
       .from('schedules')
-      .select('*')
+      .select('id, date, site_name, work_content, memo')
       .eq('id', id)
       .single()
 
@@ -32,105 +33,152 @@ export default function EditSchedule() {
 
     if (data) {
       setDate(data.date || '')
-      setSite(data.site_name || '')
-      setContent(data.work_content || '')
+      setSiteName(data.site_name || '')
+      setWorkContent(data.work_content || '')
       setMemo(data.memo || '')
     }
   }
 
   const handleUpdate = async () => {
+    if (!date) {
+      alert('日付を入力してください')
+      return
+    }
+
+    if (!siteName.trim()) {
+      alert('現場名を入力してください')
+      return
+    }
+
+    if (!workContent.trim()) {
+      alert('作業内容を入力してください')
+      return
+    }
+
+    setLoading(true)
+
     const { error } = await supabase
       .from('schedules')
       .update({
         date,
-        site_name: site,
-        work_content: content,
+        site_name: siteName,
+        work_content: workContent,
         memo
       })
       .eq('id', id)
+
+    setLoading(false)
 
     if (error) {
       alert('更新エラー: ' + error.message)
       return
     }
 
-    alert('更新完了')
+    alert('更新しました')
     router.push('/schedules')
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-        スケジュール編集
-      </h1>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#000000',
+        padding: 12
+      }}
+    >
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <div
+          style={{
+            background: '#464646',
+            borderRadius: 20,
+            padding: 16,
+            color: '#ffffff',
+            marginBottom: 12
+          }}
+        >
+          <div style={{ fontSize: 22, fontWeight: 700 }}>
+            予定編集
+          </div>
+          <div style={{ fontSize: 12, color: '#d1d5db', marginTop: 4 }}>
+            Edit Schedule
+          </div>
+        </div>
 
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 20,
+            padding: 12
+          }}
+        >
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={inputStyle}
+          />
 
-      <input
-        value={site}
-        onChange={(e) => setSite(e.target.value)}
-        placeholder="現場名"
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+          <input
+            type="text"
+            placeholder="現場名"
+            value={siteName}
+            onChange={(e) => setSiteName(e.target.value)}
+            style={inputStyle}
+          />
 
-      <input
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="作業内容"
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+          <textarea
+            placeholder="作業内容"
+            value={workContent}
+            onChange={(e) => setWorkContent(e.target.value)}
+            style={{
+              ...inputStyle,
+              minHeight: 110,
+              resize: 'vertical'
+            }}
+          />
 
-      <textarea
-        value={memo}
-        onChange={(e) => setMemo(e.target.value)}
-        placeholder="メモ"
-        style={{
-          width: '100%',
-          padding: 12,
-          marginBottom: 12,
-          minHeight: 100,
-          fontSize: 16,
-          boxSizing: 'border-box'
-        }}
-      />
+          <textarea
+            placeholder="メモ"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            style={{
+              ...inputStyle,
+              minHeight: 100,
+              resize: 'vertical'
+            }}
+          />
 
-      <button
-        onClick={handleUpdate}
-        style={{
-          width: '100%',
-          padding: 12,
-          borderRadius: 8,
-          border: 'none',
-          background: '#2563eb',
-          color: '#fff',
-          fontSize: 16
-        }}
-      >
-        更新
-      </button>
+          <button
+            onClick={handleUpdate}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: 12,
+              borderRadius: 12,
+              border: 'none',
+              background: '#1f1f1f',
+              color: '#ffffff',
+              fontSize: 15,
+              fontWeight: 700,
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? '更新中...' : '更新'}
+          </button>
+        </div>
+      </div>
     </div>
   )
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: 12,
+  marginBottom: 12,
+  fontSize: 16,
+  boxSizing: 'border-box',
+  borderRadius: 12,
+  border: 'none',
+  background: '#1f1f1f',
+  color: '#ffffff'
 }
