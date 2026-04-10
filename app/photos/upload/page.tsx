@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 type Worker = {
-  id: string
+  id: number
   name: string
 }
 
@@ -15,7 +15,7 @@ export default function PhotoUploadPage() {
   const [site, setSite] = useState('')
   const [shotDate, setShotDate] = useState('')
   const [workerId, setWorkerId] = useState('')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [sites, setSites] = useState<string[]>([])
   const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(false)
@@ -61,7 +61,7 @@ export default function PhotoUploadPage() {
       return
     }
 
-    setWorkers(data || [])
+    setWorkers((data as Worker[]) || [])
   }
 
   const makeSafeFolderName = (name: string) => {
@@ -77,6 +77,11 @@ export default function PhotoUploadPage() {
     )
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setPhotoFiles(files)
+  }
+
   const handleUpload = async () => {
     if (!site.trim()) {
       alert('現場名を入力してください')
@@ -88,7 +93,7 @@ export default function PhotoUploadPage() {
       return
     }
 
-    if (!photoFile) {
+    if (photoFiles.length === 0) {
       alert('写真を選択してください')
       return
     }
@@ -96,34 +101,48 @@ export default function PhotoUploadPage() {
     try {
       setLoading(true)
 
-      const ext = photoFile.name.split('.').pop() || 'jpg'
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const filePath = `${makeSafeFolderName(site)}/${fileName}`
+      const safeSite = makeSafeFolderName(site)
+      const uploadedRows: {
+        site: string
+        shot_date: string
+        worker_id: number | null
+        photo_url: string
+      }[] = []
 
-      const { error: uploadError } = await supabase.storage
-        .from('report-photos')
-        .upload(filePath, photoFile)
+      for (const file of photoFiles) {
+        const ext = file.name.split('.').pop() || 'jpg'
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const filePath = `${safeSite}/${fileName}`
 
-      if (uploadError) {
-        throw uploadError
+        const { error: uploadError } = await supabase.storage
+          .from('report-photos')
+          .upload(filePath, file)
+
+        if (uploadError) {
+          throw new Error(`アップロード失敗: ${file.name} / ${uploadError.message}`)
+        }
+
+        const { data } = supabase.storage
+          .from('report-photos')
+          .getPublicUrl(filePath)
+
+        uploadedRows.push({
+          site,
+          shot_date: shotDate,
+          worker_id: workerId ? Number(workerId) : null,
+          photo_url: data.publicUrl
+        })
       }
 
-      const { data } = supabase.storage
-        .from('report-photos')
-        .getPublicUrl(filePath)
+      const { error: insertError } = await supabase
+        .from('photos')
+        .insert(uploadedRows)
 
-      const { error } = await supabase.from('photos').insert({
-        site,
-        shot_date: shotDate,
-        worker_id: workerId || null,
-        photo_url: data.publicUrl
-      })
-
-      if (error) {
-        throw error
+      if (insertError) {
+        throw new Error('保存エラー: ' + insertError.message)
       }
 
-      alert('アップロード完了')
+      alert(`${uploadedRows.length}枚アップロードしました`)
       router.push('/photos')
     } catch (e: any) {
       alert('エラー: ' + e.message)
@@ -177,9 +196,23 @@ export default function PhotoUploadPage() {
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-            style={{ marginBottom: 16, color: '#fff' }}
+            multiple
+            onChange={handleFileChange}
+            style={{ marginBottom: 12, color: '#fff' }}
           />
+
+          <div
+            style={{
+              marginBottom: 16,
+              padding: 10,
+              borderRadius: 12,
+              background: '#1f1f1f',
+              color: '#d1d5db',
+              fontSize: 13
+            }}
+          >
+            選択中: {photoFiles.length}枚
+          </div>
 
           <button onClick={handleUpload} style={buttonStyle} disabled={loading}>
             {loading ? 'アップロード中...' : 'アップロード'}
