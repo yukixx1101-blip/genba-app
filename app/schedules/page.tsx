@@ -48,80 +48,195 @@ export default function ScheduleList() {
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-        スケジュール一覧
-      </h1>
-
-      <Link href="/schedules/new">
-        <button
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#000000',
+        padding: 12
+      }}
+    >
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <div
           style={{
-            width: '100%',
-            padding: 12,
-            marginBottom: 16,
-            borderRadius: 8,
-            border: 'none',
-            background: '#16a34a',
-            color: '#fff',
-            fontSize: 16
+            background: '#464646',
+            borderRadius: 20,
+            padding: 16,
+            color: '#ffffff',
+            marginBottom: 12
           }}
         >
-          ＋ スケジュール登録
-        </button>
-      </Link>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>
+            予定一覧
+          </div>
+          <div style={{ fontSize: 12, color: '#d1d5db', marginTop: 4 }}>
+            Schedules
+          </div>
+        </div>
 
-      {data.length === 0 ? (
-        <p>まだ予定がありません</p>
-      ) : (
-        data.map((item) => (
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 16,
+            padding: 10,
+            marginBottom: 12
+          }}
+        >
+          <Link href="/schedules/new" style={{ textDecoration: 'none' }}>
+            <button
+              style={{
+                width: '100%',
+                padding: 12,
+                borderRadius: 12,
+                border: 'none',
+                background: '#1f1f1f',
+                color: '#ffffff',
+                fontSize: 15,
+                fontWeight: 700
+              }}
+            >
+              予定登録
+            </button>
+          </Link>
+        </div>
+
+        {data.length === 0 ? (
           <div
-            key={item.id}
             style={{
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: 12,
-              marginBottom: 12,
-              background: '#fff'
+              background: '#1f1f1f',
+              borderRadius: 16,
+              padding: 16,
+              color: '#d1d5db'
             }}
           >
-            <p>📅 {item.date}</p>
-            <p>🏗 {item.site_name}</p>
-            <p>🔧 {item.work_content}</p>
-            <p>📝 {item.memo || 'なし'}</p>
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <Link href={`/schedules/${item.id}/edit`} style={{ flex: 1 }}>
-                <button
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    background: '#2563eb',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 6
-                  }}
-                >
-                  編集
-                </button>
-              </Link>
-
-              <button
-                onClick={() => handleDelete(item.id)}
+            まだ予定がありません
+          </div>
+        ) : (
+          data.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                background: '#1f1f1f',
+                borderRadius: 16,
+                padding: 14,
+                marginBottom: 10,
+                color: '#ffffff'
+              }}
+            >
+              <div
                 style={{
-                  flex: 1,
-                  padding: 10,
-                  background: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6
+                  fontSize: 13,
+                  color: '#d1d5db',
+                  marginBottom: 8
                 }}
               >
-                削除
-              </button>
+                {item.date || '-'}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 17,
+                  fontWeight: 700,
+                  marginBottom: 8,
+                  lineHeight: 1.4
+                }}
+              >
+                {item.site_name || '現場名未入力'}
+              </div>
+
+              <div
+                style={{
+                  background: '#2a2a2a',
+                  borderRadius: 12,
+                  padding: 10,
+                  marginBottom: 8
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#d1d5db',
+                    marginBottom: 4
+                  }}
+                >
+                  作業内容
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: '#ffffff'
+                  }}
+                >
+                  {item.work_content || 'なし'}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: '#2a2a2a',
+                  borderRadius: 12,
+                  padding: 10
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#d1d5db',
+                    marginBottom: 4
+                  }}
+                >
+                  メモ
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: '#ffffff'
+                  }}
+                >
+                  {item.memo || 'なし'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Link
+                  href={`/schedules/${item.id}/edit`}
+                  style={{ flex: 1, textDecoration: 'none' }}
+                >
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: 10,
+                      background: '#808080',
+                      color: '#000000',
+                      border: 'none',
+                      borderRadius: 10,
+                      fontWeight: 700
+                    }}
+                  >
+                    編集
+                  </button>
+                </Link>
+
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    background: '#464646',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontWeight: 700
+                  }}
+                >
+                  削除
+                </button>
+              </div>
             </div>
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
     </div>
   )
 }
