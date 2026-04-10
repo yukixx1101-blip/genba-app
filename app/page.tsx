@@ -79,7 +79,7 @@ export default function Home() {
         {/* ヘッダー */}
         <div
           style={{
-            background: '#6e6e6e', // ←ここ変更
+            background: '#464646', // ← 最終変更
             borderRadius: 20,
             padding: 16,
             color: '#ffffff',
@@ -87,7 +87,6 @@ export default function Home() {
             position: 'relative'
           }}
         >
-          {/* 通知 */}
           <div style={{ position: 'absolute', top: 14, right: 14 }}>
             <Bell size={20} />
             {hasNotification && (
@@ -118,7 +117,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 通知 */}
         {message && (
           <div
             style={{
@@ -134,7 +132,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* メニュー枠 */}
+        {/* メニュー */}
         <div
           style={{
             background: '#808080',
