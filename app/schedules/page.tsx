@@ -1,157 +1,266 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type Schedule = {
-  id: number
-  title: string
+  id: string
   date: string
-  location?: string | null
-  description?: string | null
-  created_at?: string
+  site_name: string
+  work_content: string
+  memo: string
 }
 
-export default function SchedulePage() {
-  const [schedules, setSchedules] = useState<Schedule[]>([])
-  const [loading, setLoading] = useState(true)
+export default function ScheduleList() {
+  const [data, setData] = useState<Schedule[]>([])
 
   useEffect(() => {
-    fetchSchedules()
+    fetchData()
   }, [])
 
-  async function fetchSchedules() {
-    setLoading(true)
+  const fetchData = async () => {
+    const today = new Date().toISOString().split('T')[0]
 
     const { data, error } = await supabase
       .from('schedules')
       .select('*')
+      .gte('date', today)
       .order('date', { ascending: true })
 
     if (error) {
-      console.error('予定取得エラー:', error)
-      setSchedules([])
-      setLoading(false)
+      alert('取得エラー: ' + error.message)
       return
     }
 
-    setSchedules(data ?? [])
-    setLoading(false)
+    setData(data || [])
   }
 
-  const filteredSchedules = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    return schedules.filter((schedule) => {
-      const scheduleDate = new Date(schedule.date)
-      scheduleDate.setHours(0, 0, 0, 0)
-      return scheduleDate >= today
-    })
-  }, [schedules])
-
-  function formatDate(dateString: string) {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short',
-    })
-  }
-
-  async function handleDelete(id: number) {
-    const ok = window.confirm('この予定を削除しますか？')
+  const handleDelete = async (id: string) => {
+    const ok = confirm('削除しますか？')
     if (!ok) return
 
     const { error } = await supabase.from('schedules').delete().eq('id', id)
 
     if (error) {
-      alert('削除に失敗しました')
-      console.error(error)
+      alert('削除エラー: ' + error.message)
       return
     }
 
-    setSchedules((prev) => prev.filter((item) => item.id !== id))
+    fetchData()
   }
 
-  return (
-    <main className="min-h-screen bg-gray-50 px-4 py-6">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">予定一覧</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              過去の日付の予定は表示していません
-            </p>
-          </div>
+  const today = new Date().toISOString().split('T')[0]
 
-          <Link
-            href="/schedule/new"
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            ＋ 予定登録
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#000000',
+        padding: 12
+      }}
+    >
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <div
+          style={{
+            background: '#464646',
+            borderRadius: 20,
+            padding: 16,
+            color: '#ffffff',
+            marginBottom: 12
+          }}
+        >
+          <div style={{ fontSize: 22, fontWeight: 700 }}>
+            予定一覧
+          </div>
+          <div style={{ fontSize: 12, color: '#d1d5db', marginTop: 4 }}>
+            Schedules
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: '#808080',
+            borderRadius: 16,
+            padding: 10,
+            marginBottom: 12
+          }}
+        >
+          <Link href="/schedules/new" style={{ textDecoration: 'none' }}>
+            <button
+              style={{
+                width: '100%',
+                padding: 12,
+                borderRadius: 12,
+                border: 'none',
+                background: '#1f1f1f',
+                color: '#ffffff',
+                fontSize: 15,
+                fontWeight: 700
+              }}
+            >
+              予定登録
+            </button>
           </Link>
         </div>
 
-        {loading ? (
-          <div className="rounded-xl bg-white p-6 text-center text-gray-500 shadow-sm">
-            読み込み中...
-          </div>
-        ) : filteredSchedules.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center text-gray-500 shadow-sm">
-            表示する予定はありません
+        {data.length === 0 ? (
+          <div
+            style={{
+              background: '#1f1f1f',
+              borderRadius: 16,
+              padding: 16,
+              color: '#d1d5db'
+            }}
+          >
+            今日以降の予定はありません
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredSchedules.map((schedule) => (
+          data.map((item) => {
+            const isToday = item.date === today
+
+            return (
               <div
-                key={schedule.id}
-                className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100"
+                key={item.id}
+                style={{
+                  background: isToday ? '#2a2a2a' : '#1f1f1f',
+                  borderRadius: 16,
+                  padding: 14,
+                  marginBottom: 10,
+                  color: '#ffffff'
+                }}
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="mb-1 text-sm font-medium text-blue-600">
-                      {formatDate(schedule.date)}
-                    </p>
-                    <h2 className="text-lg font-bold text-gray-900">
-                      {schedule.title}
-                    </h2>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: '#d1d5db',
+                    marginBottom: 8
+                  }}
+                >
+                  {item.date || '-'}
+                  {isToday && (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        background: '#808080',
+                        color: '#000000',
+                        fontSize: 11,
+                        fontWeight: 700
+                      }}
+                    >
+                      今日
+                    </span>
+                  )}
+                </div>
 
-                    {schedule.location ? (
-                      <p className="mt-2 text-sm text-gray-600">
-                        現場: {schedule.location}
-                      </p>
-                    ) : null}
+                <div
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 700,
+                    marginBottom: 8,
+                    lineHeight: 1.4
+                  }}
+                >
+                  {item.site_name || '現場名未入力'}
+                </div>
 
-                    {schedule.description ? (
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
-                        {schedule.description}
-                      </p>
-                    ) : null}
+                <div
+                  style={{
+                    background: '#383838',
+                    borderRadius: 12,
+                    padding: 10,
+                    marginBottom: 8
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: '#d1d5db',
+                      marginBottom: 4
+                    }}
+                  >
+                    作業内容
                   </div>
-
-                  <div className="flex shrink-0 gap-2">
-                    <Link
-                      href={`/schedule/${schedule.id}/edit`}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      編集
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(schedule.id)}
-                      className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                    >
-                      削除
-                    </button>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      color: '#ffffff'
+                    }}
+                  >
+                    {item.work_content || 'なし'}
                   </div>
                 </div>
+
+                <div
+                  style={{
+                    background: '#383838',
+                    borderRadius: 12,
+                    padding: 10
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: '#d1d5db',
+                      marginBottom: 4
+                    }}
+                  >
+                    メモ
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      color: '#ffffff'
+                    }}
+                  >
+                    {item.memo || 'なし'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <Link
+                    href={`/schedules/${item.id}/edit`}
+                    style={{ flex: 1, textDecoration: 'none' }}
+                  >
+                    <button
+                      style={{
+                        width: '100%',
+                        padding: 10,
+                        background: '#808080',
+                        color: '#000000',
+                        border: 'none',
+                        borderRadius: 10,
+                        fontWeight: 700
+                      }}
+                    >
+                      編集
+                    </button>
+                  </Link>
+
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    style={{
+                      flex: 1,
+                      padding: 10,
+                      background: '#464646',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 10,
+                      fontWeight: 700
+                    }}
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            )
+          })
         )}
       </div>
-    </main>
+    </div>
   )
 }
