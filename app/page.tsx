@@ -79,7 +79,7 @@ export default function Home() {
         {/* ヘッダー */}
         <div
           style={{
-            background: '#808080',
+            background: '#6e6e6e', // ←ここ変更
             borderRadius: 20,
             padding: 16,
             color: '#ffffff',
@@ -118,7 +118,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 通知メッセージ */}
+        {/* 通知 */}
         {message && (
           <div
             style={{
