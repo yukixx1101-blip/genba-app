@@ -15,13 +15,13 @@ export default function Home() {
         { event: '*', schema: 'public', table: 'reports' },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setMessage('📄 日報が追加されました')
+            setMessage('日報が追加されました')
           }
           if (payload.eventType === 'UPDATE') {
-            setMessage('✏️ 日報が更新されました')
+            setMessage('日報が更新されました')
           }
           if (payload.eventType === 'DELETE') {
-            setMessage('🗑 日報が削除されました')
+            setMessage('日報が削除されました')
           }
         }
       )
@@ -30,13 +30,13 @@ export default function Home() {
         { event: '*', schema: 'public', table: 'schedules' },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setMessage('📅 スケジュールが追加されました')
+            setMessage('スケジュールが追加されました')
           }
           if (payload.eventType === 'UPDATE') {
-            setMessage('✏️ スケジュールが更新されました')
+            setMessage('スケジュールが更新されました')
           }
           if (payload.eventType === 'DELETE') {
-            setMessage('🗑 スケジュールが削除されました')
+            setMessage('スケジュールが削除されました')
           }
         }
       )
@@ -65,69 +65,36 @@ export default function Home() {
     })
   }, [])
 
-  const topCards = [
-    {
-      label: '日報',
-      value: '確認',
-      icon: '📄',
-      color: '#2563eb'
-    },
-    {
-      label: '予定',
-      value: '管理',
-      icon: '📅',
-      color: '#f59e0b'
-    },
-    {
-      label: '写真',
-      value: '一覧',
-      icon: '📷',
-      color: '#0ea5e9'
-    },
-    {
-      label: '通知',
-      value: '反映中',
-      icon: '🔔',
-      color: '#ef4444'
-    }
-  ]
-
-  const quickLinks = [
+  const menuItems = [
     {
       href: '/reports',
-      title: '日報一覧',
-      icon: '📄',
-      bg: '#2563eb'
+      ja: '日報一覧',
+      en: 'Reports'
     },
     {
       href: '/reports/new',
-      title: '日報登録',
-      icon: '📝',
-      bg: '#16a34a'
+      ja: '日報登録',
+      en: 'New Report'
     },
     {
       href: '/photos',
-      title: '写真一覧',
-      icon: '📷',
-      bg: '#0ea5e9'
+      ja: '写真一覧',
+      en: 'Photos'
     },
     {
       href: '/schedules',
-      title: '予定一覧',
-      icon: '📅',
-      bg: '#f59e0b'
+      ja: '予定一覧',
+      en: 'Schedules'
     },
     {
       href: '/schedules/new',
-      title: '予定登録',
-      icon: '➕',
-      bg: '#ef4444'
+      ja: '予定登録',
+      en: 'New Schedule'
     },
     {
       href: '/schedules/calendar',
-      title: 'カレンダー',
-      icon: '🗓️',
-      bg: '#8b5cf6'
+      ja: 'カレンダー',
+      en: 'Calendar'
     }
   ]
 
@@ -135,8 +102,8 @@ export default function Home() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)',
-        padding: 12
+        background: '#f3f4f6',
+        padding: '12px 12px 20px'
       }}
     >
       <div
@@ -148,76 +115,71 @@ export default function Home() {
       >
         <div
           style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            borderRadius: 20,
-            padding: 16,
-            color: '#fff',
-            boxShadow: '0 12px 30px rgba(15, 23, 42, 0.16)',
+            background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+            borderRadius: 22,
+            padding: 18,
+            color: '#ffffff',
+            boxShadow: '0 14px 32px rgba(17, 24, 39, 0.22)',
             marginBottom: 12
           }}
         >
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               justifyContent: 'space-between',
               gap: 12
             }}
           >
-            <div>
+            <div style={{ flex: 1 }}>
               <div
                 style={{
-                  fontSize: 12,
-                  color: '#cbd5e1',
-                  marginBottom: 4
+                  fontSize: 28,
+                  fontWeight: 700,
+                  lineHeight: 1.3,
+                  letterSpacing: '0.02em'
                 }}
               >
-                現場管理アプリ
+                株式会社 玄
               </div>
-              <h1
+
+              <div
                 style={{
-                  fontSize: 22,
-                  fontWeight: 'bold',
-                  margin: 0,
-                  lineHeight: 1.3
-                }}
-              >
-                ホーム
-              </h1>
-              <p
-                style={{
-                  margin: '4px 0 0 0',
+                  marginTop: 6,
                   fontSize: 13,
-                  color: '#e2e8f0'
+                  color: '#d1d5db',
+                  lineHeight: 1.6
                 }}
               >
-                開いてすぐ確認できる
-              </p>
+                今日もお疲れ様です。
+              </div>
             </div>
 
             <div
               style={{
-                minWidth: 84,
+                minWidth: 86,
                 textAlign: 'center',
-                background: 'rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 14,
-                padding: '10px 8px'
+                borderRadius: 16,
+                padding: '10px 10px'
               }}
             >
               <div
                 style={{
                   fontSize: 11,
-                  color: '#cbd5e1',
-                  marginBottom: 4
+                  color: '#9ca3af',
+                  marginBottom: 4,
+                  letterSpacing: '0.04em'
                 }}
               >
-                今日
+                TODAY
               </div>
               <div
                 style={{
-                  fontSize: 14,
-                  fontWeight: 'bold'
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: '#ffffff'
                 }}
               >
                 {today}
@@ -229,14 +191,15 @@ export default function Home() {
         {message && (
           <div
             style={{
-              background: '#fef3c7',
-              color: '#78350f',
-              padding: '10px 12px',
-              borderRadius: 14,
+              background: '#ffffff',
+              color: '#111827',
+              border: '1px solid #d1d5db',
+              borderRadius: 16,
+              padding: '11px 14px',
               marginBottom: 12,
               fontSize: 13,
-              fontWeight: 'bold',
-              border: '1px solid #fcd34d'
+              fontWeight: 600,
+              boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)'
             }}
           >
             {message}
@@ -245,99 +208,41 @@ export default function Home() {
 
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 10,
-            marginBottom: 12
-          }}
-        >
-          {topCards.map((card) => (
-            <div
-              key={card.label}
-              style={{
-                background: '#fff',
-                borderRadius: 16,
-                padding: 12,
-                border: '1px solid #e5e7eb',
-                boxShadow: '0 8px 20px rgba(15, 23, 42, 0.05)'
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 8
-                }}
-              >
-                <span style={{ fontSize: 22 }}>{card.icon}</span>
-                <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 9999,
-                    background: card.color
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#64748b',
-                  marginBottom: 4
-                }}
-              >
-                {card.label}
-              </div>
-
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: '#0f172a'
-                }}
-              >
-                {card.value}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div
-          style={{
-            background: '#fff',
-            borderRadius: 18,
-            padding: 12,
+            background: '#ffffff',
+            borderRadius: 22,
+            padding: 14,
             border: '1px solid #e5e7eb',
-            boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)'
+            boxShadow: '0 12px 28px rgba(15, 23, 42, 0.06)'
           }}
         >
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'end',
               justifyContent: 'space-between',
-              marginBottom: 10
+              marginBottom: 12
             }}
           >
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 16,
-                fontWeight: 'bold',
-                color: '#0f172a'
-              }}
-            >
-              メニュー
-            </h2>
-            <div
-              style={{
-                fontSize: 12,
-                color: '#64748b'
-              }}
-            >
-              すぐ移動
+            <div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#111827',
+                  lineHeight: 1.4
+                }}
+              >
+                メニュー
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: '#6b7280',
+                  marginTop: 2
+                }}
+              >
+                Quick Access
+              </div>
             </div>
           </div>
 
@@ -348,7 +253,7 @@ export default function Home() {
               gap: 10
             }}
           >
-            {quickLinks.map((item) => (
+            {menuItems.map((item, index) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -358,34 +263,41 @@ export default function Home() {
               >
                 <div
                   style={{
-                    background: item.bg,
-                    color: '#fff',
-                    borderRadius: 16,
-                    padding: 12,
-                    minHeight: 82,
+                    background: index === 0 || index === 3 ? '#111827' : '#ffffff',
+                    color: index === 0 || index === 3 ? '#ffffff' : '#111827',
+                    border: index === 0 || index === 3 ? '1px solid #111827' : '1px solid #d1d5db',
+                    borderRadius: 18,
+                    padding: '16px 14px',
+                    minHeight: 88,
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 8px 18px rgba(15, 23, 42, 0.12)'
+                    justifyContent: 'center',
+                    boxShadow:
+                      index === 0 || index === 3
+                        ? '0 10px 20px rgba(17, 24, 39, 0.14)'
+                        : '0 6px 16px rgba(15, 23, 42, 0.04)'
                   }}
                 >
                   <div
                     style={{
-                      fontSize: 22,
-                      lineHeight: 1
+                      fontSize: 17,
+                      fontWeight: 700,
+                      lineHeight: 1.4,
+                      marginBottom: 4,
+                      letterSpacing: '0.01em'
                     }}
                   >
-                    {item.icon}
+                    {item.ja}
                   </div>
 
                   <div
                     style={{
-                      fontSize: 14,
-                      fontWeight: 'bold',
-                      lineHeight: 1.35
+                      fontSize: 11,
+                      color: index === 0 || index === 3 ? '#d1d5db' : '#6b7280',
+                      letterSpacing: '0.05em'
                     }}
                   >
-                    {item.title}
+                    {item.en}
                   </div>
                 </div>
               </Link>
